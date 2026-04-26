@@ -1,0 +1,509 @@
+<template>
+  <div v-if="task" class="pb-8">
+
+    <div class="flex items-center gap-2.5 px-4 pt-4 mb-3.5">
+      <button
+        class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0
+               bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text-primary)] outline-none"
+        @click="$router.back()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </button>
+      <div class="min-w-0 flex-1">
+        <p class="text-base font-bold text-[var(--text-primary)] truncate">{{ task.name }}</p>
+        <p class="text-xs text-[var(--text-muted)]">{{ task.type === 'tim' ? 'Tugas Tim' : 'Tugas Administrasi' }}</p>
+      </div>
+    </div>
+
+    <div class="mx-4 mb-3 rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] p-4">
+      <div class="flex flex-wrap gap-1.5 mb-2.5">
+        <UiGradeBadge :grade="task.grade" />
+        <UiStatusBadge :status="task.status" />
+        <span v-if="task.durasi"   class="text-xs font-semibold px-2 py-0.5 rounded-md bg-teal-400/10 text-teal-500">{{ task.durasi }}</span>
+        <span v-if="task.platform" class="text-xs font-semibold px-2 py-0.5 rounded-md bg-blue-400/10 text-blue-500">{{ task.platform }}</span>
+      </div>
+      <p class="text-lg font-bold text-[var(--text-primary)] mb-1">{{ task.name }}</p>
+      <p class="text-xs text-[var(--text-muted)] mb-3">{{ task.kat }}</p>
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-[var(--text-muted)]">Deadline</span>
+        <UiCountdownBadge :deadline="task.deadline" />
+      </div>
+    </div>
+
+    <div class="mx-4 mb-4 p-2.5 rounded-xl bg-[var(--bg-elevated)] text-xs text-[var(--text-muted)] leading-relaxed break-all">
+      <span class="text-blue-400 font-semibold">📁 Drive: </span>{{ drivePath }}
+    </div>
+
+    <template v-if="task.status === 'planning'">
+      <div class="step-bar mx-4 mb-2">
+        <div class="step-dot dot-active">1</div>
+        <p class="text-sm font-bold text-blue-400">Planning</p>
+      </div>
+      <div class="card">
+        <p class="slabel">Form Planning</p>
+        <p v-if="auth.isReadOnly" class="hint">Akses read-only</p>
+        <template v-else>
+          <div class="ff">
+            <label class="fl">Konsep / Brief *</label>
+            <textarea v-model="fP.konsep" class="fi" rows="4" placeholder="Tuliskan konsep, angle cerita, atau brief konten..."/>
+          </div>
+          <div class="ff">
+            <label class="fl">Grade (konfirmasi)</label>
+            <select v-model="fP.grade" class="fi">
+              <option>S</option><option>A</option><option>B</option><option>C</option>
+            </select>
+          </div>
+          <div class="ff">
+            <label class="fl">Link Skrip (Google Docs)</label>
+            <input v-model="fP.skrip" type="url" class="fi" placeholder="https://docs.google.com/..."/>
+          </div>
+          <div class="ff">
+            <label class="fl">Target Deadline Produksi</label>
+            <select v-model="fP.deadlineH" class="fi">
+              <option :value="24">1 Hari</option>
+              <option :value="48">2 Hari</option>
+              <option :value="72">3 Hari</option>
+              <option :value="168">1 Minggu</option>
+            </select>
+          </div>
+          <p v-if="formErr" class="text-xs text-red-400 mb-3">{{ formErr }}</p>
+          <button class="btn-primary" :disabled="saving" @click="submitPlanning">
+            {{ saving ? 'Menyimpan...' : 'PLANNING SELESAI → QC 1' }}
+          </button>
+          <NuxtLink to="/" class="btn-outline mt-2.5">Kembali ke Beranda</NuxtLink>
+        </template>
+      </div>
+      <div class="mx-4 mt-1 space-y-2 opacity-50">
+        <div v-for="(s, i) in STEPS.slice(1)" :key="s.key" class="step-bar">
+          <div class="step-dot dot-pending">{{ i + 2 }}</div>
+          <p class="text-xs text-[var(--text-muted)]">{{ s.label }}</p>
+        </div>
+      </div>
+    </template>
+
+    <template v-else-if="task.status === 'qc1'">
+      <TaskStepsDone :steps="STEPS" :done="1" />
+      <div class="step-bar mx-4 mb-2">
+        <div class="step-dot dot-active">2</div>
+        <p class="text-sm font-bold text-blue-400">QC 1</p>
+      </div>
+      <div class="card">
+        <p class="slabel">Review Konsep & Skrip</p>
+        <div class="prev-box mb-3">
+          <p class="text-xs font-semibold text-[var(--text-secondary)] mb-1">Konsep:</p>
+          <p class="text-xs text-[var(--text-secondary)] leading-relaxed">{{ task.konsep || '(belum ada konsep)' }}</p>
+          <a v-if="task.skrip" :href="task.skrip" target="_blank"
+            class="text-xs text-blue-400 mt-2 inline-block">Buka Skrip di Drive →</a>
+        </div>
+        <div v-if="!auth.isReadOnly">
+          <div class="ff">
+            <label class="fl">Komentar QC 1</label>
+            <textarea v-model="fQc.comment" class="fi" rows="3" placeholder="Catatan untuk planner..."/>
+          </div>
+          <div class="flex gap-2.5">
+            <button class="btn-danger flex-1" :disabled="saving" @click="submitQc('revisi')">REVISI</button>
+            <button class="btn-success flex-1" :disabled="saving" @click="submitQc('setuju')">SETUJU → PRODUKSI</button>
+          </div>
+          <NuxtLink to="/" class="btn-outline mt-2.5">Kembali ke Beranda</NuxtLink>
+        </div>
+      </div>
+      <div class="mx-4 mt-1 space-y-2 opacity-50">
+        <div v-for="(s, i) in STEPS.slice(2)" :key="s.key" class="step-bar">
+          <div class="step-dot dot-pending">{{ i + 3 }}</div>
+          <p class="text-xs text-[var(--text-muted)]">{{ s.label }}</p>
+        </div>
+      </div>
+    </template>
+
+    <template v-else-if="task.status === 'produksi'">
+      <TaskStepsDone :steps="STEPS" :done="2" />
+      <div class="step-bar mx-4 mb-2">
+        <div class="step-dot dot-active">3</div>
+        <p class="text-sm font-bold text-blue-400">Produksi</p>
+      </div>
+      <div class="card">
+        <p class="slabel">Informasi File Produksi</p>
+        <p v-if="auth.isReadOnly" class="hint">Akses read-only</p>
+        <template v-else>
+          
+          <div class="ff">
+            <label class="fl">Catatan Produksi (opsional)</label>
+            <textarea v-model="fProd.note" class="fi" rows="2" placeholder="Kendala, teknis shoot, dsb..."/>
+          </div>
+
+          <div class="ff relative z-10">
+            <label class="fl">Pilihan Komputer / Hardisk *</label>
+            <IosSelect 
+              v-model="fProd.drive" 
+              label="Pilih Drive Penyimpanan" 
+              placeholder="Pilih lokasi penyimpanan..." 
+              :options="driveOptions" 
+            />
+          </div>
+
+          <div class="ff">
+            <label class="fl">Lokasi Path (Folder) *</label>
+            <input type="text" v-model="fProd.path" class="fi" placeholder="Contoh: D:\PROJECT UPM\April\Podcast Guru" />
+          </div>
+
+          <button class="btn-primary mt-3" 
+            :disabled="saving || !fProd.drive || !fProd.path.trim()"
+            @click="submitProduksi">
+            FILE SIAP → KIRIM KE EDITING
+          </button>
+          <NuxtLink to="/" class="btn-outline mt-2.5">Kembali ke Beranda</NuxtLink>
+
+        </template>
+      </div>
+      <div class="mx-4 mt-1 space-y-2 opacity-50">
+        <div v-for="(s, i) in STEPS.slice(3)" :key="s.key" class="step-bar">
+          <div class="step-dot dot-pending">{{ i + 4 }}</div>
+          <p class="text-xs text-[var(--text-muted)]">{{ s.label }}</p>
+        </div>
+      </div>
+    </template>
+
+    <template v-else-if="task.status === 'editing'">
+      <TaskStepsDone :steps="STEPS" :done="3" />
+      <div class="step-bar mx-4 mb-2">
+        <div class="step-dot dot-active">4</div>
+        <p class="text-sm font-bold text-blue-400">Editing</p>
+      </div>
+      <div class="card">
+        <p class="slabel">Upload File Hasil Edit</p>
+        <p v-if="auth.isReadOnly" class="hint">Akses read-only</p>
+        <template v-else>
+          <TaskFileChip v-if="task.file" :name="task.file" :drive-id="task.file_drive_id" />
+          <div class="ff">
+            <label class="fl">Catatan Editor (opsional)</label>
+            <textarea v-model="fEdit.note" class="fi" rows="2" placeholder="Versi edit, perubahan, dsb..."/>
+          </div>
+          <TaskUploadZone :for-id="`fe-${task.id}`" label="Upload Hasil Edit" sub="File final hasil editing" />
+          <input :id="`fe-${task.id}`" type="file" class="hidden"
+            accept="video/*,image/*,.pdf,.zip" @change="handleUpload($event)"/>
+          <TaskUploadProgress v-if="uploading" :pct="uploadPct" :path="drivePath" />
+          <div v-if="!uploading">
+            <button class="btn-primary mt-3" :disabled="saving || !task.file"
+              @click="advanceStatus('qc2')">SELESAI EDIT → QC 2</button>
+            <NuxtLink to="/" class="btn-outline mt-2.5">Kembali ke Beranda</NuxtLink>
+          </div>
+        </template>
+      </div>
+      <div class="mx-4 mt-1 space-y-2 opacity-50">
+        <div v-for="(s, i) in STEPS.slice(4)" :key="s.key" class="step-bar">
+          <div class="step-dot dot-pending">{{ i + 5 }}</div>
+          <p class="text-xs text-[var(--text-muted)]">{{ s.label }}</p>
+        </div>
+      </div>
+    </template>
+
+    <template v-else-if="task.status === 'qc2'">
+      <TaskStepsDone :steps="STEPS" :done="4" />
+      <div class="step-bar mx-4 mb-2">
+        <div class="step-dot dot-active">5</div>
+        <p class="text-sm font-bold text-blue-400">QC 2</p>
+      </div>
+      <div class="card">
+        <p class="slabel">Review File Final</p>
+        <div class="prev-box mb-3">
+          <p class="text-xs text-[var(--text-muted)] mb-1">File:</p>
+          <TaskFileChip v-if="task.file" :name="task.file" :drive-id="task.file_drive_id" :inline="true" />
+          <p v-else class="text-xs text-[var(--text-muted)]">Belum ada file diunggah</p>
+        </div>
+        <div v-if="!auth.isReadOnly">
+          <div class="ff">
+            <label class="fl">Komentar QC 2</label>
+            <textarea v-model="fQc.comment" class="fi" rows="3" placeholder="Catatan untuk editor / tim..."/>
+          </div>
+          <div class="flex gap-2.5">
+            <button class="btn-danger flex-1" :disabled="saving" @click="submitQc('revisi')">REVISI</button>
+            <button class="btn-success flex-1" :disabled="saving" @click="submitQc('setuju')">SETUJU → DISTRIBUSI</button>
+          </div>
+          <NuxtLink to="/" class="btn-outline mt-2.5">Kembali ke Beranda</NuxtLink>
+        </div>
+      </div>
+      <div class="mx-4 mt-1 opacity-50">
+        <div class="step-bar">
+          <div class="step-dot dot-pending">6</div>
+          <p class="text-xs text-[var(--text-muted)]">Distribusi</p>
+        </div>
+      </div>
+    </template>
+
+    <template v-else-if="task.status === 'distribusi'">
+      <TaskStepsDone :steps="STEPS" :done="5" />
+      <div class="step-bar mx-4 mb-2">
+        <div class="step-dot dot-active">6</div>
+        <p class="text-sm font-bold text-blue-400">Distribusi / Publikasi</p>
+      </div>
+      <div class="card text-center py-4">
+        <svg class="mx-auto mb-3 w-12 h-12 text-blue-400" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+        </svg>
+        <p class="text-base font-bold text-[var(--text-primary)] mb-1">Siap Dipublikasikan!</p>
+        <p class="text-xs text-[var(--text-muted)] mb-4">File: {{ task.file ?? '—' }}</p>
+        <div v-if="!auth.isReadOnly" class="text-left">
+          <div class="ff">
+            <label class="fl">Link Publikasi (opsional)</label>
+            <input v-model="fDist.link" type="url" class="fi" placeholder="https://instagram.com/p/..."/>
+          </div>
+          <button class="btn-success mt-1" :disabled="saving" @click="submitDistribusi">TANDAI SELESAI ✓</button>
+          <NuxtLink to="/" class="btn-outline mt-2.5">Kembali ke Beranda</NuxtLink>
+        </div>
+      </div>
+    </template>
+
+    <template v-else-if="task.status === 'selesai'">
+      <div class="card text-center py-8 mx-4">
+        <svg class="mx-auto mb-3 w-14 h-14 text-green-400" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4L12 14.01l-3-3"/>
+        </svg>
+        <p class="text-lg font-bold text-green-400 mb-1">Tugas Selesai!</p>
+        <p class="text-xs text-[var(--text-muted)]">File: {{ task.file ?? '—' }}</p>
+        <NuxtLink to="/" class="btn-outline mt-4">Kembali ke Beranda</NuxtLink>
+      </div>
+    </template>
+
+  </div>
+
+  <div v-else class="flex flex-col items-center justify-center h-64 text-[var(--text-muted)] text-sm">
+    <p class="text-4xl mb-3">😕</p>
+    <p>Tugas tidak ditemukan</p>
+    <NuxtLink to="/" class="mt-4 px-5 py-2.5 rounded-xl border border-[var(--border-md)] text-[var(--text-secondary)]">Kembali ke Beranda</NuxtLink>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { useTasksStore }   from '~/stores/tasks'
+import { useAuthStore }    from '~/stores/auth'
+import { useDrive }        from '~/composables/useDrive'
+import { useWhatsApp }     from '~/composables/useWhatsApp'
+import type { TaskGrade, TaskStatus } from '~/types'
+
+// Explicit imports — menghindari ambiguity auto-import Nuxt
+import UiGradeBadge      from '~/components/ui/GradeBadge.vue'
+import UiStatusBadge     from '~/components/ui/StatusBadge.vue'
+import UiCountdownBadge  from '~/components/ui/CountdownBadge.vue'
+import TaskStepsDone     from '~/components/task/StepsDone.vue'
+import TaskFileChip      from '~/components/task/FileChip.vue'
+import TaskUploadZone    from '~/components/task/UploadZone.vue'
+import TaskUploadProgress from '~/components/task/UploadProgress.vue'
+
+definePageMeta({ middleware: 'auth' })
+
+const route  = useRoute()
+const tasks  = useTasksStore()
+const auth   = useAuthStore()
+const drive  = useDrive()
+const wa     = useWhatsApp()
+const toast  = useToast()
+
+const id   = computed(() => route.params.id as string)
+const task = computed(() => tasks.tasks.find(t => t.id === id.value) ?? null)
+onMounted(() => { if (!tasks.tasks.length) tasks.fetchTasks() })
+
+const drivePath  = computed(() => task.value ? drive.getDrivePathString(task.value) : '')
+const actorName  = computed(() => auth.currentUser?.name ?? 'Tim UPM')
+
+const STEPS = [
+  { key: 'planning',   label: 'Planning'   },
+  { key: 'qc1',        label: 'QC 1'       },
+  { key: 'produksi',   label: 'Produksi'   },
+  { key: 'editing',    label: 'Editing'    },
+  { key: 'qc2',        label: 'QC 2'       },
+  { key: 'distribusi', label: 'Distribusi' },
+]
+
+// Form states — satu per step
+const fP    = reactive({ konsep: '', grade: 'A' as TaskGrade, skrip: '', deadlineH: 72 })
+const fQc   = reactive({ comment: '' })
+const fProd = reactive({ note: '', drive: '', path: '' })
+
+// Opsi pilihan untuk IosSelect
+const driveOptions = [
+  'PC 1', 'PC 2', 'PC 3', 'PC 4', 
+  'Hardisk 4TB 2025', 'Hardisk 4TB 2026'
+]
+const fEdit = reactive({ note: '' })
+const fDist = reactive({ link: '' })
+
+// Pre-fill planning form dari data task yang ada
+watch(task, t => {
+  if (!t) return
+  fP.konsep = t.konsep ?? ''
+  fP.grade  = t.grade
+  fP.skrip  = t.skrip  ?? ''
+}, { immediate: true })
+
+const saving    = ref(false)
+const formErr   = ref('')
+const uploading = ref(false)
+const uploadPct = ref(0)
+
+// ── Planning ───────────────────────────────────────────────────
+const submitPlanning = async () => {
+  formErr.value = ''
+  if (!fP.konsep.trim()) { formErr.value = 'Konsep wajib diisi'; return }
+  if (!task.value) return
+  saving.value = true
+  await tasks.updateStatus(task.value.id, 'qc1', {
+    grade:    fP.grade,
+    konsep:   fP.konsep.trim(),
+    skrip:    fP.skrip,
+    deadline: new Date(Date.now() + fP.deadlineH * 3_600_000).toISOString(),
+  })
+  await wa.notifyPlanningDone(task.value, actorName.value)
+  saving.value = false
+  toast.add({ title: 'Planning selesai → QC 1 ✓', color: 'green' })
+}
+
+// ── QC ────────────────────────────────────────────────────────
+const submitQc = async (d: 'setuju' | 'revisi') => {
+  if (!task.value) return
+  saving.value = true
+  if (d === 'setuju') {
+    const next: TaskStatus = task.value.status === 'qc1' ? 'produksi' : 'distribusi'
+    await tasks.updateStatus(task.value.id, next, { qc_comment: fQc.comment })
+    await wa.notifyQcApproved(task.value, actorName.value, fQc.comment)
+    toast.add({ title: `Disetujui → ${next} ✓`, color: 'green' })
+  } else {
+    const back: TaskStatus = task.value.status === 'qc1' ? 'planning' : 'editing'
+    await tasks.updateStatus(task.value.id, back, { qc_comment: fQc.comment })
+    await wa.notifyQcRevision(task.value, actorName.value, fQc.comment)
+    toast.add({ title: 'Revisi dikirim', color: 'orange' })
+  }
+  fQc.comment = ''
+  saving.value = false
+}
+
+// ── Advance status ─────────────────────────────────────────────
+const advanceStatus = async (next: TaskStatus) => {
+  if (!task.value) return
+  saving.value = true
+  await tasks.updateStatus(task.value.id, next)
+  if (next === 'editing') await wa.notifyUploadProduksi(task.value, actorName.value)
+  if (next === 'qc2')     await wa.notifyUploadEditing(task.value, actorName.value)
+  saving.value = false
+  toast.add({ title: 'Status diperbarui ✓', color: 'green' })
+}
+
+// ── Produksi ──────────────────────────────────────────────────
+const submitProduksi = async () => {
+  if (!task.value) return
+  if (!fProd.drive || !fProd.path.trim()) return // Validasi biar gak kosong
+  
+  saving.value = true
+  
+  // Gabungke Pilihan Drive + Lokasi Path dadi siji tulisan
+  const finalLocation = `[${fProd.drive}] ${fProd.path.trim()}`
+  
+  // Update status dadi 'editing' lan simpen lokasi neng kolom 'file'
+  await tasks.updateStatus(task.value.id, 'editing', { 
+    file: finalLocation 
+  })
+  
+  // Kirim Notif WA
+  await wa.notifyUploadProduksi(task.value, actorName.value)
+  
+  saving.value = false
+  toast.add({ title: 'Data file terkirim ke Editing ✓', color: 'green' })
+}
+
+// ── Distribusi ─────────────────────────────────────────────────
+const submitDistribusi = async () => {
+  if (!task.value) return
+  saving.value = true
+  await tasks.updateStatus(task.value.id, 'selesai', {
+    skrip: fDist.link || task.value.skrip,
+  })
+  await wa.notifySelesai(task.value, actorName.value)
+  saving.value = false
+  toast.add({ title: 'Tugas selesai! 🏁', color: 'green' })
+}
+
+// ── Upload ─────────────────────────────────────────────────────
+const handleUpload = async (e: Event) => {
+  const input = e.target as HTMLInputElement
+  const file  = input.files?.[0]
+  if (!file || !task.value) return
+  uploading.value = true
+  uploadPct.value = 0
+  try {
+    let result
+    if (drive.driveConnected.value) {
+      result = await drive.uploadFile(file, task.value, p => { uploadPct.value = p })
+    } else {
+      await new Promise<void>(res => {
+        let p = 0
+        const iv = setInterval(() => {
+          p += Math.random() * 18
+          uploadPct.value = Math.min(Math.round(p), 99)
+          if (p >= 100) { clearInterval(iv); uploadPct.value = 100; setTimeout(res, 300) }
+        }, 120)
+      })
+      result = { fileId: '', fileName: file.name, webViewLink: '', drivePath: '' }
+    }
+    // Simpan nama file ke task — status TIDAK berubah otomatis saat upload
+    await tasks.updateStatus(task.value.id, task.value.status, {
+      file:          result.fileName,
+      file_drive_id: result.fileId || undefined,
+    })
+    toast.add({ title: `✅ "${file.name}" berhasil diupload`, color: 'green' })
+  } catch (err: any) {
+    toast.add({ title: 'Upload gagal: ' + err.message, color: 'red' })
+  } finally {
+    uploading.value = false
+    uploadPct.value = 0
+    input.value     = ''
+  }
+}
+</script>
+
+<style scoped>
+.card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 16px;
+}
+.slabel  { font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; display: block; }
+.ff      { margin-bottom: 14px; }
+.fl      { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; display: block; }
+.fi      { width: 100%; background: var(--bg-elevated); border: 1.5px solid var(--border-md); border-radius: 10px; padding: 12px 14px; color: var(--text-primary); font-size: 0.875rem; font-family: inherit; outline: none; transition: border-color .2s; resize: vertical; }
+.fi:focus { border-color: var(--blue); }
+
+.btn-primary, .btn-success, .btn-danger {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; padding: 13px; border-radius: 12px; border: none;
+  font-size: 0.875rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: opacity .15s;
+}
+
+/* ── CLASS BARU UNTUK TOMBOL KEMBALI ── */
+.btn-outline {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; padding: 12px; border-radius: 12px; border: 1.5px solid var(--border-md);
+  font-size: 0.875rem; font-weight: 700; color: var(--text-secondary);
+  background: transparent; cursor: pointer; font-family: inherit; text-decoration: none; transition: background .15s, opacity .15s;
+}
+.btn-outline:active { opacity: 0.7; background: var(--bg-elevated); }
+/* ──────────────────────────────────── */
+
+.btn-primary { background: var(--blue);  color: #fff; }
+.btn-success { background: var(--green); color: #fff; }
+.btn-danger  { background: var(--red);   color: #fff; }
+.btn-primary:disabled, .btn-success:disabled, .btn-danger:disabled { opacity: .5; cursor: not-allowed; }
+
+.step-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.step-dot {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 700; flex-shrink: 0;
+}
+.dot-active  { background: var(--blue);  color: #fff; box-shadow: 0 0 0 3px rgba(59,130,246,.2); }
+.dot-done    { background: var(--green); color: #fff; }
+.dot-pending { background: var(--bg-elevated); color: var(--text-muted); border: 1.5px solid var(--border-md); }
+
+.prev-box { background: var(--bg-elevated); border-radius: 10px; padding: 12px; }
+.hint { text-align: center; padding: 16px; font-size: 0.875rem; color: var(--text-muted); font-style: italic; }
+</style>

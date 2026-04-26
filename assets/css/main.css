@@ -1,0 +1,76 @@
+/* ================================================================
+   UPM Mission Control — Global Styles
+   Semua teks pakai Plus Jakarta Sans. Tidak ada font-mono.
+   ================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; height: 100%; overflow: hidden; }
+body {
+  height: 100%; overflow: hidden;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Theme tokens ─────────────────────────────────────────── */
+:root {
+  --bg-base:    #0f172a;  --bg-surface: #1e293b;
+  --bg-elevated:#263046;  --bg-card:    #1a2540;
+  --text-primary:   #f1f5f9; --text-secondary: #94a3b8; --text-muted: #64748b;
+  --border:    rgba(255,255,255,0.08);  --border-md: rgba(255,255,255,0.14);
+  --blue:   #3b82f6; --green:  #22c55e; --orange: #f97316;
+  --red:    #ef4444; --yellow: #eab308; --purple: #a855f7; --teal: #14b8a6;
+  --grade-s: #ef4444; --grade-a: #22c55e; --grade-b: #3b82f6; --grade-c: #eab308;
+  --shell-max: 480px; --nav-h: 72px; --header-h: 56px;
+  /* Semua font pakai Jakarta Plus */
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+  --font-mono: 'Plus Jakarta Sans', sans-serif;
+  --radius: 12px; --radius-sm: 8px; --radius-lg: 16px;
+}
+
+[data-theme="light"] {
+  --bg-base:    #f1f5f9; --bg-surface: #ffffff;
+  --bg-elevated:#f8fafc; --bg-card:    #ffffff;
+  --text-primary:   #0f172a; --text-secondary: #475569; --text-muted: #94a3b8;
+  --border:    rgba(0,0,0,0.08); --border-md: rgba(0,0,0,0.14);
+}
+
+/* ── Nuxt root ────────────────────────────────────────────── */
+#__nuxt { height: 100%; display: flex; justify-content: center; background: var(--bg-base); }
+
+/* ── App shell — strict 480px ─────────────────────────────── */
+.app-shell {
+  width: 100%; max-width: var(--shell-max);
+  height: 100dvh; display: flex; flex-direction: column;
+  overflow: hidden; position: relative; background: var(--bg-base);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 32px 80px rgba(0,0,0,0.5);
+}
+
+/* ── Scrollable area ──────────────────────────────────────── */
+.view-scroll {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  padding-bottom: calc(var(--nav-h) + 12px);
+}
+.view-scroll.no-nav { padding-bottom: 0; }
+.view-scroll::-webkit-scrollbar { display: none; }
+.app-shell * { max-width: 100%; }
+
+/* ── Transitions ──────────────────────────────────────────── */
+.page-enter-active, .page-leave-active { transition: opacity .18s ease, transform .18s ease; }
+.page-enter-from { opacity: 0; transform: translateY(6px); }
+.page-leave-to   { opacity: 0; }
+
+/* ── Forms ────────────────────────────────────────────────── */
+input, select, textarea, button { font-family: 'Plus Jakarta Sans', sans-serif; }
+select option { background: var(--bg-surface); color: var(--text-primary); }
+
+/* ── Scrollbar ────────────────────────────────────────────── */
+*::-webkit-scrollbar       { width: 4px; height: 4px; }
+*::-webkit-scrollbar-track  { background: transparent; }
+*::-webkit-scrollbar-thumb  { background: var(--border-md); border-radius: 2px; }
+
+/* ── Override any lingering font-mono in Tailwind ─────────── */
+.font-mono { font-family: 'Plus Jakarta Sans', sans-serif !important; }
