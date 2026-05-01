@@ -47,7 +47,7 @@ onMounted(async () => {
 const { error: dbError } = await supabase
       .from('user_settings')
       .upsert({
-        user_id: MASTER_USER_ID, // Isine 'ziyan'
+        user_id: USER_ID, // Isine 'ziyan'
         drive_refresh_token: data.refresh_token,
         updated_at: new Date().toISOString()
       })
