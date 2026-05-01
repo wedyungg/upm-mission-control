@@ -1,11 +1,16 @@
+// server/api/drive-token.post.ts
 import { serverSupabaseClient } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
   const body = await readBody(event)
-  const { code, userId, redirectUri } = body
+  
+  // 1. Ambil data dari body (Pastikan nama variabel sesuai dengan frontend)
+  // Kita pakai redirect_uri (snake_case) sesuai kiriman confirm-drive.vue
+  const { code, redirect_uri } = body
+  const MASTER_USER_ID = 'ziyan' // Mengunci ke ID 'ziyan'
 
-  // 1. Tukar kode otorisasi dari Google dengan token akses dan refresh token
+  // 2. Tukar kode otorisasi dari Google dengan token
   const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -14,7 +19,7 @@ export default defineEventHandler(async (event) => {
       client_secret: String(config.googleClientSecret),
       code: code,
       grant_type: 'authorization_code',
-      redirect_uri: redirectUri,
+      redirect_uri: redirect_uri, // Harus cocok dengan yang didaftarkan di Google Console
     }),
   })
 
@@ -27,21 +32,21 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // 2. Simpan refresh_token ke tabel user_settings di Supabase
-  // Catatan: Google hanya mengirimkan refresh_token pada saat pengguna pertama kali memberikan izin
+  // 3. Simpan refresh_token ke tabel user_settings di Supabase
   if (tokens.refresh_token) {
     const supabase = await serverSupabaseClient(event)
     const { error } = await supabase
       .from('user_settings')
       .upsert({ 
-        user_id: userId, 
+        user_id: MASTER_USER_ID, 
         drive_refresh_token: tokens.refresh_token 
-      })
+      }, { onConflict: 'user_id' })
 
     if (error) {
       throw createError({ statusCode: 500, statusMessage: 'Gagal menyimpan token ke database' })
     }
   }
 
-  return { success: true, message: 'Google Drive berhasil dihubungkan secara permanen' }
+  // 4. PENTING: Kembalikan tokens (access_token) agar frontend bisa langsung pakai
+  return tokens
 })
