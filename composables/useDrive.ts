@@ -13,7 +13,7 @@ export const useDrive = () => {
 
   // ── KONFIGURASI AKUN PUSAT ──────────────────────────────────
   // Menggunakan ID 'ziyan' sebagai pemegang token utama
-  const MASTER_USER_ID = 'ziyan' 
+  const USER_ID = 'ziyan' 
 
   const OAUTH_SCOPES = [
     'https://www.googleapis.com/auth/drive',
@@ -45,7 +45,7 @@ export const useDrive = () => {
       const { data } = await supabase
         .from('user_settings')
         .select('drive_refresh_token')
-        .eq('user_id', MASTER_USER_ID)
+        .eq('user_id', USER_ID)
         .maybeSingle()
 
       driveConnected.value = !!(data && data.drive_refresh_token)

@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
   // 1. Ambil data dari body (Pastikan nama variabel sesuai dengan frontend)
   // Kita pakai redirect_uri (snake_case) sesuai kiriman confirm-drive.vue
   const { code, redirect_uri } = body
-  const MASTER_USER_ID = 'ziyan' // Mengunci ke ID 'ziyan'
+  const USER_ID = 'ziyan' // Mengunci ke ID 'ziyan'
 
   // 2. Tukar kode otorisasi dari Google dengan token
   const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
     const { error } = await supabase
       .from('user_settings')
       .upsert({ 
-        user_id: MASTER_USER_ID, 
+        user_id: USER_ID, 
         drive_refresh_token: tokens.refresh_token 
       }, { onConflict: 'user_id' })
 
