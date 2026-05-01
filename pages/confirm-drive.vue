@@ -44,16 +44,13 @@ onMounted(async () => {
     })
 
     // 2. Simpan token ke baris data MASTER_EMAIL di tabel user_settings
-    const { error: dbError } = await supabase
+const { error: dbError } = await supabase
       .from('user_settings')
       .upsert({
-        email: MASTER_EMAIL,
+        user_id: MASTER_USER_ID, // Isine 'ziyan'
         drive_refresh_token: data.refresh_token,
         updated_at: new Date().toISOString()
-      }, { onConflict: 'email' })
-
-    if (dbError) throw dbError
-
+      })
     // 3. Simpan access token ke state sementara
     drive.driveToken.value = data.access_token
     
