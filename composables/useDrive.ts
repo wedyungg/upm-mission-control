@@ -12,8 +12,8 @@ export const useDrive = () => {
   const driveConnected = ref(false)
 
   // ── KONFIGURASI AKUN PUSAT ──────────────────────────────────
-  // PENTING: Ganti 'upm_pusat' dengan user_id akun upm@pim.sch.id Anda
-  const MASTER_USER_ID = 'ziyan'
+  // Menggunakan ID 'ziyan' sebagai pemegang token utama
+  const MASTER_USER_ID = 'ziyan' 
 
   const OAUTH_SCOPES = [
     'https://www.googleapis.com/auth/drive',
@@ -38,7 +38,7 @@ export const useDrive = () => {
   }
 
   /**
-   * Mengecek status koneksi akun PUSAT di tabel user_settings.
+   * Memeriksa apakah akun MASTER (ziyan) sudah terhubung di tabel user_settings
    */
   const checkDriveStatus = async () => {
     try {
