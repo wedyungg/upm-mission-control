@@ -5,17 +5,24 @@ import { useHijri } from './useHijri'
 export const useDrive = () => {
   const config = useRuntimeConfig()
   const supabase = useSupabaseClient()
-  const auth = useAuthStore() // Sesuaikan dengan store autentikasi Anda
+  const auth = useAuthStore()
   const { MONTHS_ID, approxCurrentHijriYear } = useHijri()
 
   const driveToken     = useState<string | null>('drive_token', () => null)
   const driveConnected = ref(false)
+
+  // ── KONFIGURASI AKUN PUSAT ──────────────────────────────────
+  const MASTER_EMAIL = 'upm@pim.sch.id'
 
   const OAUTH_SCOPES = [
     'https://www.googleapis.com/auth/drive',
     'https://www.googleapis.com/auth/drive.metadata.readonly',
   ].join(' ')
 
+  /**
+   * Mengarahkan ke Google Login untuk mendapatkan token pusat.
+   * Hanya perlu dilakukan satu kali oleh pemegang akun upm@pim.sch.id.
+   */
   const connectDrive = () => {
     const clientId = String(config.public.googleClientId ?? '')
     const redirect = `${window.location.origin}/confirm-drive`
@@ -33,34 +40,31 @@ export const useDrive = () => {
     window.location.href = url
   }
 
-  // ── Pengecekan Status Otorisasi dari Supabase ──────────────
+  /**
+   * Mengecek apakah akun MASTER (upm@pim.sch.id) sudah terhubung.
+   * Dipanggil agar semua anggota tim tahu status koneksi pusat.
+   */
   const checkDriveStatus = async () => {
-    if (!auth.currentUser?.id) return
-
     try {
       const { data, error } = await supabase
         .from('user_settings')
         .select('drive_refresh_token')
-        .eq('user_id', auth.currentUser.id)
-        .single()
+        .eq('email', MASTER_EMAIL) // Mencari berdasarkan email pusat
+        .maybeSingle()
 
-      if (data && data.drive_refresh_token) {
-        driveConnected.value = true
-      } else {
-        driveConnected.value = false
-      }
+      driveConnected.value = !!(data && data.drive_refresh_token)
     } catch (err) {
-      console.error('Gagal memuat status Google Drive:', err)
       driveConnected.value = false
     }
   }
 
-  // Otomatis memeriksa status saat composable dipanggil di halaman
   onMounted(() => {
     checkDriveStatus()
   })
 
-  // ── Drive API wrapper ────────────────────────────────────────────────
+  /**
+   * Fungsi Internal untuk memanggil API Google Drive
+   */
   const apiFetch = async (url: string, options: RequestInit = {}) => {
     const res = await fetch(url, {
       ...options,
@@ -70,6 +74,11 @@ export const useDrive = () => {
         ...(options.headers ?? {}),
       },
     })
+    
+    if (res.status === 401) {
+      throw new Error('UNAUTHORIZED') // Token kedaluwarsa
+    }
+
     if (!res.ok) {
       const body = await res.text()
       throw new Error(`Drive API ${res.status}: ${body}`)
@@ -77,29 +86,17 @@ export const useDrive = () => {
     return res.json()
   }
 
-  // ── Folder helpers ───────────────────────────────────────────────────
+  // ── FOLDER HELPERS ───────────────────────────────────────────────────
   const findFolder = async (name: string, parentId: string): Promise<string | null> => {
-    const q = [
-      `name='${name.replace(/'/g, "\\'")}'`,
-      `mimeType='application/vnd.google-apps.folder'`,
-      `'${parentId}' in parents`,
-      `trashed=false`,
-    ].join(' and ')
-    const d = await apiFetch(
-      `https://www.googleapis.com/drive/v3/files` +
-      `?q=${encodeURIComponent(q)}&fields=files(id,name)&spaces=drive`
-    )
+    const q = [`name='${name.replace(/'/g, "\\'")}'`, `mimeType='application/vnd.google-apps.folder'`, `'${parentId}' in parents`, `trashed=false`].join(' and ')
+    const d = await apiFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)&spaces=drive`)
     return d.files?.[0]?.id ?? null
   }
 
   const createFolder = async (name: string, parentId: string): Promise<string> => {
     const d = await apiFetch('https://www.googleapis.com/drive/v3/files', {
       method: 'POST',
-      body: JSON.stringify({
-        name,
-        mimeType: 'application/vnd.google-apps.folder',
-        parents:  [parentId],
-      }),
+      body: JSON.stringify({ name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] }),
     })
     return d.id
   }
@@ -110,36 +107,32 @@ export const useDrive = () => {
   const buildDrivePath = (task: Task): string[] => {
     const hy     = task.hijri_year ?? approxCurrentHijriYear()
     const period = `${hy}H — ${hy + 1}H`
-    const bulan  = MONTHS_ID[task.bulan ?? new Date().getMonth()] ?? 'Unknown'
+    const bulan  = MONTHS_ID[task.bulan ?? 0] ?? 'Unknown'
     return [period, bulan, `Grade ${task.grade}`, task.name]
   }
 
   const getDrivePathString = (task: Task): string => {
-    const rootName = String(config.public.googleDriveFolderName ?? 'SISTEM DASHBOARD UPM')
+    const rootName = String(config.public.googleDriveFolderName ?? 'UPM Mission Control')
     return [rootName, ...buildDrivePath(task)].join(' / ')
   }
 
-  // ── Upload file ke Drive ─────────────────────────────────────────────
-  const uploadFile = async (
-    file: File,
-    task: Task,
-    onProgress?: (pct: number) => void,
-  ): Promise<DriveUploadResult> => {
-    if (!driveToken.value) throw new Error('Belum terhubung ke Google Drive')
- 
+  /**
+   * PROSES UPLOAD FILE (MODE MASTER)
+   */
+  const uploadFile = async (file: File, task: Task, onProgress?: (pct: number) => void): Promise<DriveUploadResult> => {
+    
+    // Validasi awal: Memastikan sistem sudah punya akses Master
+    if (!driveConnected.value) throw new Error('Akses Google Drive Pusat belum dikonfigurasi oleh Admin.')
+
+    // Jika driveToken kosong, kita akan memicu proses "Silent Refresh" di backend/confirm-drive 
+    // Untuk saat ini, kita asumsikan middleware atau halaman confirm-drive sudah mengisi driveToken.value
+    if (!driveToken.value) throw new Error('Sesi Google Drive berakhir. Silakan refresh halaman atau hubungi Admin.')
+
     const rootFolderId = String(config.public.googleDriveFolderId ?? '')
-    if (!rootFolderId) {
-      throw new Error('GOOGLE_DRIVE_FOLDER_ID belum dikonfigurasi.')
-    }
- 
     const pathSegments = buildDrivePath(task) 
     let parentId = rootFolderId 
 
-    const foldersToCreate = pathSegments[0] === config.public.googleDriveFolderName || pathSegments[0] === 'UPM Mission Control' 
-      ? pathSegments.slice(1) 
-      : pathSegments
-
-    for (const segment of foldersToCreate) {
+    for (const segment of pathSegments) {
       parentId = await getOrCreateFolder(segment, parentId)
     }
  
@@ -150,11 +143,8 @@ export const useDrive = () => {
  
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest()
-
       xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable && onProgress) {
-          onProgress(Math.round((e.loaded / e.total) * 100))
-        }
+        if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100))
       }
 
       xhr.onload = () => {
@@ -167,17 +157,12 @@ export const useDrive = () => {
             drivePath:   getDrivePathString(task),
           })
         } else {
-          reject(new Error(`Upload gagal (${xhr.status}): ${xhr.responseText}`))
+          reject(new Error(`Upload gagal: Akun pusat mungkin perlu disambungkan ulang.`))
         }
       }
 
       xhr.onerror = () => reject(new Error('Koneksi terputus saat upload'))
-
-      xhr.open(
-        'POST',
-        'https://www.googleapis.com/upload/drive/v3/files' +
-        '?uploadType=multipart&fields=id,name,webViewLink'
-      )
+      xhr.open('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink')
       xhr.setRequestHeader('Authorization', `Bearer ${driveToken.value}`)
       xhr.send(form)
     })
