@@ -18,7 +18,7 @@
         <span class="w-1.5 rounded-sm inline-block" style="height:20px;background:#22c55e" />
       </div>
       <p class="text-lg font-bold text-[var(--text-primary)] tracking-tight">Dashboard Kinerja UPM</p>
-      <p class="text-xs text-[var(--text-muted)] mt-0.5 font-mono">UPM Mission Control v2.0</p>
+      <p class="text-xs text-[var(--text-muted)] mt-0.5 font-mono">UPM Mission Control v1.0</p>
     </div>
 
     <!-- ── STEP 1: Account grid (Netflix-style) ── -->

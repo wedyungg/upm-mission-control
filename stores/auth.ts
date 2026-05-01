@@ -98,6 +98,18 @@ export const USERS: AppUser[] = [
     access: 'limited',
     tabAccess: ['editor'],
   },
+  {
+    id: 'tester',
+    name: 'Tester',
+    role: 'tester',
+    roleLabel: 'Quality Assurance',
+    initials: 'TC',
+    color: '#64748b',
+    bg: 'rgba(100,116,139,0.15)',
+    access: 'full', // Beri akses full supaya kamu bisa ngetes semua tombol
+    tabAccess: ['planner', 'qc', 'production', 'editor', 'publisher'],
+    phone: '6285162855285', // Isi nomor WA-mu kalau mau ngetes notifikasi
+  },
 ]
 
 export const useAuthStore = defineStore('auth', () => {

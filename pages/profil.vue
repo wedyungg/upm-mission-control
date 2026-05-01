@@ -25,36 +25,35 @@
     </div>
 
     <!-- ══ GOOGLE DRIVE — hanya Ziyan ══ -->
-    <template v-if="isZiyan">
-      <div class="card">
-        <p class="slabel">Google Drive API</p>
-        <div class="flex items-center gap-2 mb-3">
-          <span class="w-2 h-2 rounded-full flex-shrink-0" :class="driveConnected ? 'bg-[var(--green)]' : 'bg-[var(--text-muted)]'"/>
-          <span class="text-xs font-semibold" :class="driveConnected ? 'text-[var(--green)]' : 'text-[var(--text-muted)]'">
-            {{ driveConnected ? 'Terhubung ✓' : 'Belum terhubung' }}
-          </span>
-          <span v-if="driveConnected" class="ml-auto text-[10px] text-[var(--text-muted)]">Token aktif</span>
-        </div>
-        <!-- Drive info dari env — tidak bisa diedit UI (sudah di .env) -->
-        <div class="p-3 bg-[var(--bg-elevated)] rounded-xl mb-3 space-y-1.5">
-          <div class="flex items-center justify-between">
-            <p class="text-[10px] text-[var(--text-muted)]">Client ID (dari .env)</p>
-            <p class="text-[10px] font-semibold text-[var(--text-secondary)] truncate max-w-[160px]">{{ clientIdMasked }}</p>
-          </div>
-          <div class="flex items-center justify-between">
-            <p class="text-[10px] text-[var(--text-muted)]">Root Folder</p>
-            <p class="text-[10px] font-semibold text-[var(--text-secondary)]">{{ folderName }}</p>
-          </div>
-        </div>
-        <button class="btn-primary" @click="connectDrive">
-          {{ driveConnected ? 'HUBUNGKAN ULANG' : 'HUBUNGKAN GOOGLE DRIVE' }}
-        </button>
-        <p class="text-[10px] text-[var(--text-muted)] text-center mt-2">
-          Google Client ID dikonfigurasi via <code class="text-[var(--blue)]">.env</code> di server
-        </p>
-      </div>
 
-      <!-- Hijri config — hanya Ziyan -->
+<div class="card">
+      <p class="slabel">Google Drive API</p>
+      <div class="flex items-center gap-2 mb-3">
+        <span class="w-2 h-2 rounded-full flex-shrink-0" :class="driveConnected ? 'bg-[var(--green)]' : 'bg-[var(--text-muted)]'"/>
+        <span class="text-xs font-semibold" :class="driveConnected ? 'text-[var(--green)]' : 'text-[var(--text-muted)]'">
+          {{ driveConnected ? 'Terhubung ✓' : 'Belum terhubung' }}
+        </span>
+        <span v-if="driveConnected" class="ml-auto text-[10px] text-[var(--text-muted)]">Token aktif</span>
+      </div>
+      <div class="p-3 bg-[var(--bg-elevated)] rounded-xl mb-3 space-y-1.5">
+        <div class="flex items-center justify-between">
+          <p class="text-[10px] text-[var(--text-muted)]">Client ID (dari .env)</p>
+          <p class="text-[10px] font-semibold text-[var(--text-secondary)] truncate max-w-[160px]">{{ clientIdMasked }}</p>
+        </div>
+        <div class="flex items-center justify-between">
+          <p class="text-[10px] text-[var(--text-muted)]">Root Folder</p>
+          <p class="text-[10px] font-semibold text-[var(--text-secondary)]">{{ folderName }}</p>
+        </div>
+      </div>
+      <button class="btn-primary" @click="connectDrive">
+        {{ driveConnected ? 'HUBUNGKAN ULANG' : 'HUBUNGKAN GOOGLE DRIVE' }}
+      </button>
+      <p class="text-[10px] text-[var(--text-muted)] text-center mt-2">
+        Data token akan diamankan di database server.
+      </p>
+    </div>
+
+    <template v-if="isZiyan">
       <div class="card">
         <p class="slabel">Periode Hijriyah</p>
         <div class="mb-3">
@@ -70,7 +69,6 @@
         </div>
       </div>
 
-      <!-- WhatsApp Notif config -->
       <div class="card">
         <p class="slabel">Notifikasi WhatsApp</p>
         <div class="p-3 bg-[var(--bg-elevated)] rounded-xl mb-3">
@@ -80,28 +78,13 @@
           </div>
           <div class="flex items-center justify-between">
             <p class="text-[10px] text-[var(--text-muted)]">Status Kredensial</p>
-            <p class="text-[10px] font-semibold text-[var(--green)]">
-              🔒 Aman di Server
-            </p>
+            <p class="text-[10px] font-semibold text-[var(--green)]">🔒 Aman di Server</p>
           </div>
         </div>
         <button class="btn-outline text-sm" @click="testWa">Kirim Pesan Test WA</button>
-        <p class="text-[10px] text-[var(--text-muted)] text-center mt-2">
-          Dikonfigurasi via <code class="text-[var(--blue)]">.env</code> (WA_TOKEN & WA_TARGET)
-        </p>
       </div>
     </template>
 
-    <!-- ══ Drive status saja untuk non-Ziyan ══ -->
-    <div v-else class="card">
-      <p class="slabel">Google Drive</p>
-      <div class="flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full" :class="driveConnected ? 'bg-[var(--green)]' : 'bg-[var(--text-muted)]'"/>
-        <span class="text-xs" :class="driveConnected ? 'text-[var(--green)] font-semibold' : 'text-[var(--text-muted)]'">
-          {{ driveConnected ? 'Terhubung ✓' : 'Belum terhubung — hubungi Ziyan' }}
-        </span>
-      </div>
-    </div>
 
     <!-- App settings (semua bisa akses) -->
     <div class="card">
@@ -144,7 +127,7 @@ const { approxCurrentHijriYear, getHijriPeriod, formatDate } = useHijri()
 const user = computed(() => auth.currentUser)
 
 // Hanya Ziyan (id='ziyan') yang bisa kelola Drive + Hijri
-const isZiyan = computed(() => auth.currentUser?.id === 'ziyan')
+const isZiyan = computed(() => auth.currentUser?.id === 'ziyan'|| auth.currentUser?.id === 'tester')
 
 const driveConnected = computed(() => drive.driveConnected.value)
 const clientIdMasked = computed(() => {

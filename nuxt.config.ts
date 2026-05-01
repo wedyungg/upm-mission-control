@@ -29,6 +29,7 @@ runtimeConfig: {
     // 🔒 PRIVATE SECTON: Aman, hanya bisa dibaca oleh server (Edge Functions / API Routes)
     waToken: process.env.WA_TOKEN ?? '',
     waTarget: process.env.WA_TARGET ?? '',
+    googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
     
     // 🌐 PUBLIC SECTION: Bisa dibaca oleh browser (Hanya untuk ID biasa/URL)
     public: {

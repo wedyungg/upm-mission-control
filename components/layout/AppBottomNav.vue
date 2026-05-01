@@ -80,7 +80,7 @@ const auth  = useAuthStore()
 // Show Progja tab for Ziyan and Ketua
 const showProgja = computed(() =>
   auth.currentUser?.id === 'ziyan' ||
-  ['ketua', 'planner'].includes(auth.currentUser?.role ?? '')
+  ['ketua', 'planner', 'tester'].includes(auth.currentUser?.role ?? '')
 )
 
 const isActive = (path: string) =>

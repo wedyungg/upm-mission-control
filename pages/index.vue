@@ -204,22 +204,37 @@ const filterKeTugas = (status: string) => {
 
 // 6. Computed Properties
 const stats = computed(() => {
-  // 1. Ambil data kinerja khusus untuk BULAN INI (yang dipilih di dropdown)
-  const sBulanIni = tasks.getStats(activeMonth.value)
+  // 1. Hitung manual untuk bulan ini agar lebih akurat (memisahkan admin & tim)
+  const tasksBulanIni = tasks.tasks.filter(t => t.bulan === activeMonth.value)
   
-  // 2. Ambil data kinerja TAHUNAN (semua bulan) untuk menghitung sisa kuota murni
+  let countProses = 0
+  let countApproval = 0
+  let countSelesai = 0
+  
+  tasksBulanIni.forEach(t => {
+    if (t.status === 'selesai') {
+      countSelesai++
+    } else if (t.type === 'tim' && ['qc1', 'qc2', 'distribusi'].includes(t.status)) {
+      countApproval++
+    } else if (t.type === 'tim' && ['produksi', 'editing'].includes(t.status)) {
+      countProses++
+    } else if (t.type === 'admin' && t.status === 'distribusi') {
+      countProses++ // ✅ Solusi: Admin 'distribusi' masuk hitungan proses
+    }
+  })
+  
+  // 2. Ambil data kinerja TAHUNAN untuk menghitung sisa kuota murni
   const sTahunan = tasks.getStats() 
   const totalTarget = progja.getTotalTarget()
   
-  // 3. Terapkan RUMUS ZIYAN: Target (169) - (Selesai + Proses + Approval selama setahun)
-  // Pakai Math.max agar angkanya mentok di 0 (tidak jadi minus kalau kerjanya over-target)
+  // Pakai Math.max agar angkanya mentok di 0 (tidak jadi minus)
   const realBelum = Math.max(0, totalTarget - sTahunan.selesai - sTahunan.proses - sTahunan.approval)
 
   return {
-    belum: realBelum,             // Angka "belum disentuh" dari 169 target tahunan
-    proses: sBulanIni.proses,     // Kinerja aktif bulan ini
-    approval: sBulanIni.approval, // Kinerja aktif bulan ini
-    selesai: sBulanIni.selesai    // Kinerja aktif bulan ini
+    belum: realBelum,             
+    proses: countProses,     
+    approval: countApproval, 
+    selesai: countSelesai    
   }
 })
 // Perhitungan Persentase Tahunan (Annual Progress)
@@ -255,10 +270,21 @@ const dotClass = (key: string, i: number) => {
   return first > i ? 'dot-done' : 'dot-pending'
 }
 
+// index.vue (sekitar baris 152)
+
 const inProgress = computed(() =>
-  tasks.tasks.filter(t =>
-    ['produksi','editing','qc2'].includes(t.status) && t.bulan === activeMonth.value
-  )
+  tasks.tasks.filter(t => {
+    // Pastikan hanya menampilkan tugas pada bulan yang dipilih
+    if (t.bulan !== activeMonth.value) return false
+    
+    if (t.type === 'admin') {
+      // Untuk tugas admin, tampilkan yang sedang di tahap penyelesaian ('distribusi')
+      return t.status === 'distribusi'
+    } else {
+      // Untuk tugas tim, tampilkan yang sedang diproses
+      return ['produksi','editing','qc2'].includes(t.status)
+    }
+  })
 )
 </script>
 

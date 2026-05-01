@@ -1,5 +1,4 @@
 // composables/useWhatsApp.ts
-
 import type { Task, TaskStatus } from '~/types'
 import { USERS } from '~/stores/auth' 
 
@@ -20,12 +19,17 @@ interface WaPayload {
   extra?: string
 }
 
-// ── 1. Logika Aksi Spesifik (Sesuai Permintaan) ─────────────────
-const getActionLabel = (event: WaEvent, status: TaskStatus): string => {
-  if (event === 'task_created') return 'telah membuat jadwal baru'
+// ── 1. Logika Aksi Spesifik (Sesuai Tipe Tugas) ─────────────────
+const getActionLabel = (event: WaEvent, task: Task): string => {
+  if (event === 'task_created') {
+    // Bedakan pesan antara tugas Admin dan Tim
+    return task.type === 'admin' 
+      ? 'telah menugaskan pekerjaan administrasi' 
+      : 'telah membuat jadwal baru'
+  }
   if (event === 'planning_done') return 'telah menyelesaikan naskah'
   if (event === 'qc_approved') {
-    return status === 'produksi' ? 'telah menyetujui konsep' : 'telah menyetujui konten final'
+    return task.status === 'produksi' ? 'telah menyetujui konsep' : 'telah menyetujui konten final'
   }
   if (event === 'upload_produksi') return 'telah menyelesaikan tahap produksi'
   if (event === 'upload_editing') return 'telah menyelesaikan tahap editing'
@@ -36,17 +40,19 @@ const getActionLabel = (event: WaEvent, status: TaskStatus): string => {
   return 'telah *memperbarui status*'
 }
 
-// ── 2. Logika Progres Selanjutnya (Sesuai Permintaan) ──────────
-const getDetailedNextStep = (event: WaEvent, status: TaskStatus): string => {
+// ── 2. Logika Progres Selanjutnya ──────────
+const getDetailedNextStep = (event: WaEvent, task: Task): string => {
   switch (event) {
-    case 'task_created':    return 'Pembuatan Skrip & Konsep'
+    case 'task_created':    
+      // Tugas Admin tidak butuh skrip, langsung ke penyelesaian
+      return task.type === 'admin' ? 'Penyelesaian & Bukti Lampiran' : 'Pembuatan Skrip & Konsep'
     case 'planning_done':   return 'Review Konsep (QC 1)'
     case 'qc_approved':     
-      return status === 'produksi' ? 'Proses Produksi' : 'Persiapan Publikasi'
+      return task.status === 'produksi' ? 'Proses Produksi' : 'Persiapan Publikasi'
     case 'upload_produksi': return 'Proses Editing Video/Konten'
     case 'upload_editing':  return 'Review Hasil Final (QC 2)'
     case 'qc_revision':     
-      return status === 'planning' ? 'Perbaikan Skrip' : 'Perbaikan Editing'
+      return task.status === 'planning' ? 'Perbaikan Skrip' : 'Perbaikan Editing'
     case 'distribusi_ready':return 'Arsip Dokumentasi'
     case 'task_selesai':    return 'Selesai 🏁'
     default: return 'Cek di Aplikasi'
@@ -54,14 +60,15 @@ const getDetailedNextStep = (event: WaEvent, status: TaskStatus): string => {
 }
 
 // ── 3. Logika Tagging (Siapa yang harus lanjut) ────────────────
-const getTargetRole = (event: WaEvent, status: TaskStatus): string => {
-  if (event === 'qc_revision') return status === 'planning' ? 'planner' : 'editor_crew'
+const getTargetRole = (event: WaEvent, task: Task): string => {
+  if (event === 'qc_revision') return task.status === 'planning' ? 'planner' : 'editor_crew'
   
   switch (event) {
-    case 'task_created':    return 'planner'
+    case 'task_created':    
+      return task.type === 'admin' ? 'admin_partnership' : 'planner'
     case 'planning_done':   return 'ketua'
     case 'qc_approved':     
-      return status === 'produksi' ? 'production' : 'admin_partnership'
+      return task.status === 'produksi' ? 'production' : 'admin_partnership'
     case 'upload_produksi': return 'editor'
     case 'upload_editing':  return 'ketua' // Balik ke QC 2
     case 'distribusi_ready':return 'admin_partnership'
@@ -81,17 +88,17 @@ export const useWhatsApp = () => {
   const supabase = useSupabaseClient()
 
   const buildMessage = ({ task, event, actor, extra }: WaPayload): string => {
-    const actionLabel = getActionLabel(event, task.status)
-    const nextStep = getDetailedNextStep(event, task.status)
-    const targetRole = getTargetRole(event, task.status)
+    // Panggil fungsi dengan parameter task
+    const actionLabel = getActionLabel(event, task)
+    const nextStep = getDetailedNextStep(event, task)
+    const targetRole = getTargetRole(event, task)
+    
     const targetUsers = USERS.filter(u => u.role === targetRole)
     const targetMention = targetUsers.length > 0 
       ? targetUsers.map(u => `*${u.name}*`).join(' & ') 
       : '*(Petugas)*'
 
     let msg = `*[UPM MISSION CONTROL]*\n\n`
-    
-    // Baris Pertama: Nama Orang + Aksi
     msg += `*${actor || 'Anggota'}* ${actionLabel} untuk proyek *"${task.name}"*.\n`
     msg += `\n➡ Progres selanjutnya: *${nextStep}*\n\n`
     

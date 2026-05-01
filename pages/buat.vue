@@ -40,10 +40,10 @@
           <div class="success-ico">✅</div>
           <div class="success-title">Tugas Berhasil Dibuat!</div>
           <div class="success-sub">
-            {{ lastType === 'admin'
-              ? 'Tugas administrasi langsung ditandai selesai.'
-              : 'Tugas tim ditambahkan ke alur Planning.' }}
-          </div>
+  {{ lastType === 'admin'
+    ? 'Tugas administrasi ditambahkan ke antrean Penyelesaian.'
+    : 'Tugas tim ditambahkan ke alur Planning.' }}
+</div>
           <button class="btn btn-primary" @click="resetForm">BUAT TUGAS LAGI</button>
           <button class="btn btn-outline" style="margin-top:8px" @click="navigateTo('/')">KE BERANDA</button>
         </div>
@@ -144,12 +144,12 @@
         </div>
 
         <div class="ff">
-          <label class="fl">Grade Tugas</label>
+          <label class="fl">Grade (Beban Kerja)</label>
           <select v-model="fAdmin.grade" class="fi">
-            <option value="S">S — Super Priority</option>
-            <option value="A">A — High</option>
-            <option value="B">B — Medium</option>
-            <option value="C">C — Normal</option>
+            <option value="S">S — Kompleks</option>
+            <option value="A">A — Berat</option>
+            <option value="B">B — Sedang</option>
+            <option value="C">C — Ringan</option>
           </select>
         </div>
 
@@ -182,7 +182,7 @@
         </div>
 
         <button class="btn btn-primary" :disabled="submitting" @click="submit">
-          {{ submitting ? 'Membuat...' : 'BUAT & SELESAIKAN' }}
+          {{ submitting ? 'Membuat...' : 'BUAT TUGAS' }}
         </button>
       </div>
 
@@ -353,13 +353,13 @@ const submit = async () => {
     await wa.notifyTaskCreated(newTask, actorName)
 
   } else {
-    // Kanggo tugas Admin (langsung dianggep selesai)
+    // ✅ Solusi: Tugas Admin masuk ke tahap penyelesaian (distribusi)
     const newTask = await tasks.createTask({
       id:         'a' + now,
       name:       fAdmin.name.trim(),
       kat:        fAdmin.kat,
       grade:      fAdmin.grade,
-      status:     'selesai',
+      status:     'distribusi', // <--- DIUBAH DARI 'selesai'
       type:       'admin',
       deadline:   new Date(now + fAdmin.deadlineH * 3600000).toISOString(),
       file:       fAdmin.link  || null,
@@ -368,8 +368,8 @@ const submit = async () => {
       hijri_year: hy,
     })
 
-    // KIRIM NOTIF WA SELESAI
-    await wa.notifySelesai(newTask, actorName)
+    // KIRIM NOTIF WA
+    await wa.notifyTaskCreated(newTask, actorName)
   }
 
   submitting.value = false
