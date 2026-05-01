@@ -13,7 +13,7 @@ export const useDrive = () => {
 
   // ── KONFIGURASI AKUN PUSAT ──────────────────────────────────
   // PENTING: Ganti 'upm_pusat' dengan user_id akun upm@pim.sch.id Anda
-  const MASTER_USER_ID = 'upm_pusat' 
+  const MASTER_USER_ID = 'ziyan'
 
   const OAUTH_SCOPES = [
     'https://www.googleapis.com/auth/drive',
