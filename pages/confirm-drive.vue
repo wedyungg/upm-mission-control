@@ -1,57 +1,71 @@
 <template>
-  <div class="flex items-center justify-center min-h-screen bg-[var(--bg-base)]">
-    <div class="card p-6 max-w-sm w-full text-center">
-      <h2 class="text-lg font-bold text-[var(--text-primary)] mb-2">Menghubungkan Drive</h2>
-      <p v-if="loading" class="text-sm text-[var(--text-muted)] animate-pulse">
-        Mohon tunggu, sedang memverifikasi otorisasi...
-      </p>
-      <p v-else-if="error" class="text-sm text-red-500 font-medium">
-        {{ error }}
-      </p>
-      <p v-else class="text-sm text-[var(--green)] font-medium">
-        Berhasil! Mengalihkan kembali ke Profil...
-      </p>
+  <div class="flex flex-col items-center justify-center min-h-screen text-center px-6">
+    <h1 class="text-2xl font-bold text-[var(--text-primary)] mb-2">Menghubungkan Drive Pusat</h1>
+    
+    <div v-if="loading" class="flex flex-col items-center">
+      <div class="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+      <p class="text-sm text-[var(--text-muted)]">Sedang memproses autentikasi pusat...</p>
+    </div>
+
+    <div v-else-if="error" class="text-red-500">
+      <p class="font-bold mb-1">Terjadi kesalahan sistem.</p>
+      <p class="text-xs">{{ error }}</p>
+      <button @click="navigateTo('/profil')" class="mt-6 px-5 py-2 bg-blue-500 text-white rounded-xl font-bold text-sm">Kembali ke Profil</button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 const route = useRoute()
-const router = useRouter()
-const auth = useAuthStore() // Menyesuaikan dengan store login milikmu
-
+const supabase = useSupabaseClient()
+const drive = useDrive()
 const loading = ref(true)
 const error = ref('')
 
-onMounted(async () => {
-  const code = route.query.code
+// Email pusat yang akan dipasangkan tokennya
+const MASTER_EMAIL = 'upm@pim.sch.id'
 
+onMounted(async () => {
+  const code = route.query.code as string
   if (!code) {
-    error.value = 'Kode otorisasi dari Google tidak ditemukan.'
+    error.value = 'Kode otorisasi tidak ditemukan.'
     loading.value = false
     return
   }
 
   try {
-    // Kirim kode ke API server yang baru saja kita buat
-    await $fetch('/api/drive-auth', {
+    // 1. Tukar 'code' dengan Token melalui API Serverless (Vercel)
+    const data = await $fetch('/api/drive-token', {
       method: 'POST',
-      body: {
-        code: code,
-        userId: auth.currentUser?.id,
-        redirectUri: `${window.location.origin}/confirm-drive`
+      body: { 
+        code, 
+        redirect_uri: `${window.location.origin}/confirm-drive` 
       }
     })
+
+    // 2. Simpan token ke baris data MASTER_EMAIL di tabel user_settings
+    const { error: dbError } = await supabase
+      .from('user_settings')
+      .upsert({
+        email: MASTER_EMAIL,
+        drive_refresh_token: data.refresh_token,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'email' })
+
+    if (dbError) throw dbError
+
+    // 3. Simpan access token ke state sementara
+    drive.driveToken.value = data.access_token
     
-    loading.value = false
-    
-    // Alihkan pengguna kembali ke halaman profil setelah 1.5 detik
+    // Sukses, arahkan kembali ke profil
     setTimeout(() => {
-      router.push('/profil')
+      navigateTo('/profil')
     }, 1500)
 
   } catch (err: any) {
-    error.value = err.statusMessage || 'Terjadi kesalahan sistem.'
+    console.error(err)
+    error.value = err.message || 'Gagal menyimpan konfigurasi pusat.'
+  } finally {
     loading.value = false
   }
 })

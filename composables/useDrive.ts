@@ -12,17 +12,14 @@ export const useDrive = () => {
   const driveConnected = ref(false)
 
   // ── KONFIGURASI AKUN PUSAT ──────────────────────────────────
-  const MASTER_EMAIL = 'upm@pim.sch.id'
+  // PENTING: Ganti 'upm_pusat' dengan user_id akun upm@pim.sch.id Anda
+  const MASTER_USER_ID = 'upm_pusat' 
 
   const OAUTH_SCOPES = [
     'https://www.googleapis.com/auth/drive',
     'https://www.googleapis.com/auth/drive.metadata.readonly',
   ].join(' ')
 
-  /**
-   * Mengarahkan ke Google Login untuk mendapatkan token pusat.
-   * Hanya perlu dilakukan satu kali oleh pemegang akun upm@pim.sch.id.
-   */
   const connectDrive = () => {
     const clientId = String(config.public.googleClientId ?? '')
     const redirect = `${window.location.origin}/confirm-drive`
@@ -41,15 +38,14 @@ export const useDrive = () => {
   }
 
   /**
-   * Mengecek apakah akun MASTER (upm@pim.sch.id) sudah terhubung.
-   * Dipanggil agar semua anggota tim tahu status koneksi pusat.
+   * Mengecek status koneksi akun PUSAT di tabel user_settings.
    */
   const checkDriveStatus = async () => {
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('user_settings')
         .select('drive_refresh_token')
-        .eq('email', MASTER_EMAIL) // Mencari berdasarkan email pusat
+        .eq('user_id', MASTER_USER_ID)
         .maybeSingle()
 
       driveConnected.value = !!(data && data.drive_refresh_token)
@@ -62,10 +58,8 @@ export const useDrive = () => {
     checkDriveStatus()
   })
 
-  /**
-   * Fungsi Internal untuk memanggil API Google Drive
-   */
   const apiFetch = async (url: string, options: RequestInit = {}) => {
+    if (!driveToken.value) throw new Error('Token akses tidak tersedia.')
     const res = await fetch(url, {
       ...options,
       headers: {
@@ -74,11 +68,7 @@ export const useDrive = () => {
         ...(options.headers ?? {}),
       },
     })
-    
-    if (res.status === 401) {
-      throw new Error('UNAUTHORIZED') // Token kedaluwarsa
-    }
-
+    if (res.status === 401) throw new Error('UNAUTHORIZED')
     if (!res.ok) {
       const body = await res.text()
       throw new Error(`Drive API ${res.status}: ${body}`)
@@ -86,9 +76,8 @@ export const useDrive = () => {
     return res.json()
   }
 
-  // ── FOLDER HELPERS ───────────────────────────────────────────────────
   const findFolder = async (name: string, parentId: string): Promise<string | null> => {
-    const q = [`name='${name.replace(/'/g, "\\'")}'`, `mimeType='application/vnd.google-apps.folder'`, `'${parentId}' in parents`, `trashed=false`].join(' and ')
+    const q = [`name='${name.replace(/'/g, "\\")}'`, `mimeType='application/vnd.google-apps.folder'`, `'${parentId}' in parents`, `trashed=false`].join(' and ')
     const d = await apiFetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)&spaces=drive`)
     return d.files?.[0]?.id ?? null
   }
@@ -116,52 +105,37 @@ export const useDrive = () => {
     return [rootName, ...buildDrivePath(task)].join(' / ')
   }
 
-  /**
-   * PROSES UPLOAD FILE (MODE MASTER)
-   */
   const uploadFile = async (file: File, task: Task, onProgress?: (pct: number) => void): Promise<DriveUploadResult> => {
-    
-    // Validasi awal: Memastikan sistem sudah punya akses Master
-    if (!driveConnected.value) throw new Error('Akses Google Drive Pusat belum dikonfigurasi oleh Admin.')
-
-    // Jika driveToken kosong, kita akan memicu proses "Silent Refresh" di backend/confirm-drive 
-    // Untuk saat ini, kita asumsikan middleware atau halaman confirm-drive sudah mengisi driveToken.value
-    if (!driveToken.value) throw new Error('Sesi Google Drive berakhir. Silakan refresh halaman atau hubungi Admin.')
-
+    if (!driveToken.value) throw new Error('Sesi Google Drive pusat belum aktif.')
     const rootFolderId = String(config.public.googleDriveFolderId ?? '')
     const pathSegments = buildDrivePath(task) 
     let parentId = rootFolderId 
-
     for (const segment of pathSegments) {
       parentId = await getOrCreateFolder(segment, parentId)
     }
- 
     const meta = { name: file.name, parents: [parentId] }
     const form = new FormData()
     form.append('metadata', new Blob([JSON.stringify(meta)], { type: 'application/json' }))
     form.append('file', file)
- 
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest()
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100))
       }
-
       xhr.onload = () => {
         if (xhr.status === 200) {
           const r = JSON.parse(xhr.responseText)
           resolve({
-            fileId:      r.id,
-            fileName:    file.name,
+            fileId: r.id,
+            fileName: file.name,
             webViewLink: `https://drive.google.com/file/d/${r.id}/view`,
-            drivePath:   getDrivePathString(task),
+            drivePath: getDrivePathString(task),
           })
         } else {
-          reject(new Error(`Upload gagal: Akun pusat mungkin perlu disambungkan ulang.`))
+          reject(new Error(`Upload gagal.`))
         }
       }
-
-      xhr.onerror = () => reject(new Error('Koneksi terputus saat upload'))
+      xhr.onerror = () => reject(new Error('Koneksi terputus'))
       xhr.open('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink')
       xhr.setRequestHeader('Authorization', `Bearer ${driveToken.value}`)
       xhr.send(form)
