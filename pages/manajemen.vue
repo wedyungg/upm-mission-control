@@ -192,10 +192,10 @@ const ROLE_MULTIPLIER: Record<string, number> = {
 const MAX_POINT_CAPACITY = 20;
 
 const ROLE_TASK_MAP: Record<string, TaskStatus[]> = {
-  planner: ['planning', 'qc1'],
+  planner: ['planning', 'qc'],
   production: ['produksi'],
-  admin_partnership: ['distribusi'],
-  editor_crew: ['editing', 'qc2']
+  admin_partnership: ['selesai'],
+  editor_crew: ['produksi']
 };
 
 const displayMembers = computed(() => {
@@ -221,7 +221,7 @@ const loadCls  = (l: number) => l >= 80 ? 'load-danger' : l >= 60 ? 'load-warnin
 const loadLbl  = (l: number) => l >= 80 ? 'Overload'   : l >= 60 ? 'Sibuk'         : 'Normal';
 
 const doneTasks = computed(() =>
-  tasks.tasks.filter(t => ['distribusi', 'selesai'].includes(t.status))
+  tasks.tasks.filter(t => t.status === 'selesai')
 )
 
 const sisaTim = computed(() =>
@@ -237,10 +237,9 @@ const canCreateAdmin = computed(() => ['ketua', 'admin_partnership'].includes(au
 interface ATab { key: TabAccess; label: string; statuses: TaskStatus[] }
 const ALL_TABS: ATab[] = [
   { key: 'planner',    label: 'Planner',  statuses: ['planning']    },
-  { key: 'qc',         label: 'QC',       statuses: ['qc1', 'qc2']  },
   { key: 'production', label: 'Produksi', statuses: ['produksi']    },
-  { key: 'editor',     label: 'Editor',   statuses: ['editing']     },
-  { key: 'publisher',  label: 'Publisher',statuses: ['distribusi']  },
+  { key: 'qc',         label: 'QC',       statuses: ['qc']          },
+  { key: 'publisher',  label: 'Selesai',  statuses: ['selesai']     },
 ]
 const activeTab = ref<TabAccess>('planner')
 const tabCount  = (tab: ATab) =>

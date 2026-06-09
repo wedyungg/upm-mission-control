@@ -17,12 +17,18 @@
       <div class="flex flex-wrap gap-1.5 mb-2.5">
         <UiGradeBadge :grade="task.grade" />
         <UiStatusBadge :status="task.status" />
+        <span v-if="task.assignee" class="text-xs font-semibold px-2 py-0.5 rounded-md bg-purple-400/10 text-purple-500">🧑‍💻 {{ task.assignee }}</span>
         <span v-if="task.durasi" class="text-xs font-semibold px-2 py-0.5 rounded-md bg-teal-400/10 text-teal-500">{{ task.durasi }}</span>
         <span v-if="task.platform" class="text-xs font-semibold px-2 py-0.5 rounded-md bg-blue-400/10 text-blue-500">{{ task.platform }}</span>
       </div>
       <p class="text-lg font-bold text-[var(--text-primary)] mb-1">{{ task.name }}</p>
       <p class="text-xs text-[var(--text-muted)] mb-3">{{ task.kat }}</p>
       
+      <div class="flex items-center justify-between mb-2" v-if="task.publish_date">
+        <span class="text-xs text-[var(--text-muted)]">Target Tayang</span>
+        <span class="text-xs font-semibold text-blue-400">{{ new Date(task.publish_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) }}</span>
+      </div>
+
       <div v-if="task.status !== 'selesai'" class="flex items-center justify-between">
         <span class="text-xs text-[var(--text-muted)]">Deadline</span>
         <UiCountdownBadge :deadline="task.deadline" />
@@ -33,6 +39,7 @@
       <span class="text-blue-400 font-semibold">📁 Drive: </span>{{ drivePath }}
     </div>
 
+    <!-- TAHAP 1: PLANNING -->
     <template v-if="task.status === 'planning'">
       <div class="step-bar mx-4 mb-2">
         <div class="step-dot dot-active">1</div>
@@ -43,19 +50,13 @@
         <p v-if="!auth.hasTabAccess('planner')" class="hint">Akses khusus peran Planner.</p>
         <template v-else>
           <div v-if="task.qc_comment" class="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-             <p class="text-xs font-bold text-red-400 mb-1">Catatan Revisi QC:</p>
+             <p class="text-xs font-bold text-red-400 mb-1">Catatan Revisi:</p>
              <p class="text-xs text-[var(--text-primary)]">{{ task.qc_comment }}</p>
           </div>
 
           <div class="ff">
             <label class="fl">Konsep / Brief *</label>
             <textarea v-model="fP.konsep" class="fi" rows="4" placeholder="Tuliskan konsep, angle cerita..."/>
-          </div>
-          <div class="ff">
-            <label class="fl">Grade (konfirmasi)</label>
-            <select v-model="fP.grade" class="fi">
-              <option>S</option><option>A</option><option>B</option><option>C</option>
-            </select>
           </div>
           <div class="ff">
             <label class="fl">Link Skrip (Google Docs)</label>
@@ -69,158 +70,92 @@
           </div>
           <p v-if="formErr" class="text-xs text-red-400 mb-3">{{ formErr }}</p>
           <button class="btn-primary" :disabled="saving" @click="submitPlanning">
-            {{ saving ? 'Menyimpan...' : 'PLANNING SELESAI → QC 1' }}
+            {{ saving ? 'Menyimpan...' : 'PLANNING SELESAI → PRODUKSI' }}
           </button>
         </template>
       </div>
     </template>
 
-    <template v-else-if="task.status === 'qc1'">
+    <!-- TAHAP 2: PRODUKSI -->
+    <template v-else-if="task.status === 'produksi'">
       <TaskStepsDone :steps="STEPS" :done="1" />
       <div class="step-bar mx-4 mb-2">
         <div class="step-dot dot-active">2</div>
-        <p class="text-sm font-bold text-blue-400">QC 1</p>
+        <p class="text-sm font-bold text-blue-400">Produksi & Editing</p>
       </div>
       <div class="card">
-        <p class="slabel">Review Konsep & Skrip</p>
-        <div class="prev-box mb-3">
-          <p class="text-xs font-semibold text-[var(--text-secondary)] mb-1">Konsep:</p>
+        <p class="slabel">Proses Pembuatan Konten</p>
+        
+        <div class="prev-box mb-4">
+          <p class="text-xs font-semibold text-[var(--text-secondary)] mb-1">Konsep / Brief:</p>
           <p class="text-xs text-[var(--text-secondary)] leading-relaxed">{{ task.konsep || '(belum ada konsep)' }}</p>
           <a v-if="task.skrip" :href="task.skrip" target="_blank" class="text-xs text-blue-400 mt-2 inline-block">Buka Skrip di Drive →</a>
         </div>
-        <p v-if="!auth.hasTabAccess('qc')" class="hint">Akses khusus tim Quality Control.</p>
-        <div v-else>
-          <div class="ff">
-            <label class="fl">Komentar QC 1</label>
-            <textarea v-model="fQc.comment" class="fi" rows="3" placeholder="Catatan untuk planner..."/>
-          </div>
-          <div class="flex gap-2.5">
-            <button class="btn-danger flex-1" :disabled="saving" @click="submitQc('revisi')">REVISI</button>
-            <button class="btn-success flex-1" :disabled="saving" @click="submitQc('setuju')">SETUJU → PRODUKSI</button>
-          </div>
-        </div>
-      </div>
-    </template>
 
-    <template v-else-if="task.status === 'produksi'">
-      <TaskStepsDone :steps="STEPS" :done="2" />
-      <div class="step-bar mx-4 mb-2">
-        <div class="step-dot dot-active">3</div>
-        <p class="text-sm font-bold text-blue-400">Produksi</p>
-      </div>
-      <div class="card">
-        <p class="slabel">Informasi File Produksi</p>
         <p v-if="!auth.hasTabAccess('production')" class="hint">Akses khusus tim Produksi.</p>
         <template v-else>
-          <div class="ff">
-            <label class="fl">Catatan Produksi (opsional)</label>
-            <textarea v-model="fProd.note" class="fi" rows="2" placeholder="Kendala, teknis shoot, dsb..."/>
-          </div>
-          <div class="ff relative z-10">
-            <label class="fl">Pilihan Komputer / Hardisk *</label>
-            <IosSelect v-model="fProd.drive" label="Pilih Lokasi" placeholder="Pilih..." :options="driveOptions" />
-          </div>
-          <div class="ff">
-            <label class="fl">Lokasi Path (Folder) *</label>
-            <input type="text" v-model="fProd.path" class="fi" placeholder="Contoh: D:\PROJECT UPM\April\" />
-          </div>
-          <button class="btn-primary mt-3" :disabled="saving || !fProd.drive || !fProd.path.trim()" @click="submitProduksi">
-            FILE SIAP → KIRIM KE EDITING
-          </button>
-        </template>
-      </div>
-    </template>
-
-    <template v-else-if="task.status === 'editing'">
-      <TaskStepsDone :steps="STEPS" :done="3" />
-      <div class="step-bar mx-4 mb-2">
-        <div class="step-dot dot-active">4</div>
-        <p class="text-sm font-bold text-blue-400">Editing</p>
-      </div>
-      <div class="card">
-        <p class="slabel">Upload File Hasil Edit</p>
-        <p v-if="!auth.hasTabAccess('editor')" class="hint">Akses khusus tim Editor.</p>
-        <template v-else>
           <div v-if="task.qc_comment" class="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-             <p class="text-xs font-bold text-red-400 mb-1">Catatan Revisi QC 2:</p>
+             <p class="text-xs font-bold text-red-400 mb-1">Catatan Revisi QC:</p>
              <p class="text-xs text-[var(--text-primary)]">{{ task.qc_comment }}</p>
           </div>
 
           <TaskFileChip v-if="task.file" :name="task.file" :drive-id="task.file_drive_id" />
-          <div class="ff">
-            <label class="fl">Catatan Editor (opsional)</label>
-            <textarea v-model="fEdit.note" class="fi" rows="2" placeholder="Versi edit, perubahan..."/>
+          
+          <div class="ff mt-3">
+            <label class="fl">Catatan / Link Final (opsional)</label>
+            <textarea v-model="fProd.note" class="fi" rows="2" placeholder="Tulis keterangan atau link tambahan..."/>
           </div>
-          <TaskUploadZone :for-id="`fe-${task.id}`" label="Upload Hasil Edit" sub="File final hasil editing" />
+
+          <TaskUploadZone :for-id="`fe-${task.id}`" label="Upload Hasil Akhir" sub="Video / Gambar yang siap review" />
           <input :id="`fe-${task.id}`" type="file" class="hidden" accept="video/*,image/*,.pdf,.zip" @change="handleUpload($event)"/>
           <TaskUploadProgress v-if="uploading" :pct="uploadPct" :path="drivePath" />
-          <div v-if="!uploading">
-            <button class="btn-primary mt-3" :disabled="saving || !task.file" @click="advanceStatus('qc2')">SELESAI EDIT → QC 2</button>
+          
+          <div v-if="!uploading" class="mt-4">
+            <button class="btn-primary w-full" :disabled="saving || (!task.file && !fProd.note)" @click="submitProduksi">
+              KONTEN SELESAI → KIRIM KE QC
+            </button>
           </div>
         </template>
       </div>
     </template>
 
-    <template v-else-if="task.status === 'qc2'">
-      <TaskStepsDone :steps="STEPS" :done="4" />
+    <!-- TAHAP 3: QC (Quality Control) -->
+    <template v-else-if="task.status === 'qc'">
+      <TaskStepsDone :steps="STEPS" :done="2" />
       <div class="step-bar mx-4 mb-2">
-        <div class="step-dot dot-active">5</div>
-        <p class="text-sm font-bold text-blue-400">QC 2</p>
+        <div class="step-dot dot-active">3</div>
+        <p class="text-sm font-bold text-blue-400">Quality Control</p>
       </div>
       <div class="card">
-        <p class="slabel">Review File Final</p>
+        <p class="slabel">Review Konten Final</p>
+        
         <div class="prev-box mb-3">
-          <p class="text-xs text-[var(--text-muted)] mb-1">File:</p>
+          <p class="text-xs text-[var(--text-muted)] mb-1">File yang di-submit:</p>
           <TaskFileChip v-if="task.file" :name="task.file" :drive-id="task.file_drive_id" :inline="true" />
+          <p v-if="task.produksi_note" class="text-xs text-blue-400 mt-2">{{ task.produksi_note }}</p>
         </div>
+
         <p v-if="!auth.hasTabAccess('qc')" class="hint">Akses khusus tim Quality Control.</p>
         <div v-else>
           <div class="ff">
-            <label class="fl">Komentar QC 2</label>
-            <textarea v-model="fQc.comment" class="fi" rows="3" placeholder="Catatan untuk editor..."/>
+            <label class="fl">Komentar QC</label>
+            <textarea v-model="fQc.comment" class="fi" rows="3" placeholder="Catatan jika ada revisi..."/>
           </div>
           <div class="flex gap-2.5">
             <button class="btn-danger flex-1" :disabled="saving" @click="submitQc('revisi')">REVISI</button>
-            <button class="btn-success flex-1" :disabled="saving" @click="submitQc('setuju')">SETUJU → DISTRIBUSI</button>
+            <button class="btn-success flex-1" :disabled="saving" @click="submitQc('setuju')">SETUJU → SELESAI</button>
           </div>
         </div>
       </div>
     </template>
 
-    <template v-else-if="task.status === 'distribusi'">
-      
-      <TaskStepsDone v-if="task.type === 'tim'" :steps="STEPS" :done="5" />
-      
-      <div class="step-bar mx-4 mb-2">
-        <div class="step-dot dot-active">{{ task.type === 'tim' ? '6' : '1' }}</div>
-        <p class="text-sm font-bold text-blue-400">
-          {{ task.type === 'admin' ? 'Penyelesaian Tugas' : 'Distribusi / Publikasi' }}
-        </p>
-      </div>
-
-      <div class="card text-center py-4">
-        <svg class="mx-auto mb-3 w-12 h-12 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-        <p class="text-base font-bold text-[var(--text-primary)] mb-1">
-          {{ task.type === 'admin' ? 'Tugas Siap Diselesaikan' : 'Siap Dipublikasikan!' }}
-        </p>
-        <p class="text-xs text-[var(--text-muted)] mb-4">File: {{ task.file ?? '—' }}</p>
-        
-        <p v-if="!auth.hasTabAccess('publisher')" class="hint">Akses khusus tim Distribusi / Admin.</p>
-        <div v-else class="text-left">
-          <div class="ff">
-            <label class="fl">{{ task.type === 'admin' ? 'Link Dokumen (opsional)' : 'Link Publikasi (opsional)' }}</label>
-            <input v-model="fDist.link" type="url" class="fi" placeholder="https://..."/>
-          </div>
-          <button class="btn-success mt-1" :disabled="saving" @click="submitDistribusi">TANDAI SELESAI ✓</button>
-        </div>
-      </div>
-    </template>
-
+    <!-- TAHAP 4: SELESAI -->
     <template v-else-if="task.status === 'selesai'">
       <div class="card text-center py-8 mx-4">
         <svg class="mx-auto mb-3 w-14 h-14 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4L12 14.01l-3-3"/></svg>
         <p class="text-lg font-bold text-green-400 mb-1">Tugas Selesai!</p>
         <p class="text-xs text-[var(--text-muted)]">File / Bukti: {{ task.file ?? '—' }}</p>
+        <p v-if="task.publish_date" class="text-xs text-blue-400 mt-2 font-bold">Akan tayang: {{ new Date(task.publish_date).toLocaleDateString('id-ID') }}</p>
       </div>
     </template>
 
@@ -266,19 +201,14 @@ const actorName  = computed(() => auth.currentUser?.name ?? 'Tim UPM')
 
 const STEPS = [
   { key: 'planning',   label: 'Planning'   },
-  { key: 'qc1',        label: 'QC 1'       },
   { key: 'produksi',   label: 'Produksi'   },
-  { key: 'editing',    label: 'Editing'    },
-  { key: 'qc2',        label: 'QC 2'       },
-  { key: 'distribusi', label: 'Distribusi' },
+  { key: 'qc',         label: 'QC'         },
+  { key: 'selesai',    label: 'Selesai'    },
 ]
 
 const fP    = reactive({ konsep: '', grade: 'A' as TaskGrade, skrip: '', deadlineH: 72 })
 const fQc   = reactive({ comment: '' })
-const fProd = reactive({ note: '', drive: '', path: '' })
-const driveOptions = ['PC 1', 'PC 2', 'PC 3', 'PC 4', 'Hardisk 4TB 2025', 'Hardisk 4TB 2026']
-const fEdit = reactive({ note: '' })
-const fDist = reactive({ link: '' })
+const fProd = reactive({ note: '' })
 
 watch(task, t => {
   if (!t) return
@@ -297,64 +227,37 @@ const submitPlanning = async () => {
   if (!fP.konsep.trim()) { formErr.value = 'Konsep wajib diisi'; return }
   if (!task.value) return
   saving.value = true
-  await tasks.updateStatus(task.value.id, 'qc1', {
+  await tasks.updateStatus(task.value.id, 'produksi', {
     grade:    fP.grade,
     konsep:   fP.konsep.trim(),
     skrip:    fP.skrip,
     deadline: new Date(Date.now() + fP.deadlineH * 3_600_000).toISOString(),
     qc_comment: null // Hapus history revisi jika ada
   })
-  await wa.notifyPlanningDone(task.value, actorName.value)
   saving.value = false
-  toast.add({ title: 'Planning selesai → QC 1 ✓', color: 'green' })
+  toast.add({ title: 'Planning selesai → Produksi ✓', color: 'green' })
+}
+
+const submitProduksi = async () => {
+  if (!task.value) return
+  saving.value = true
+  await tasks.updateStatus(task.value.id, 'qc', { produksi_note: fProd.note })
+  saving.value = false
+  toast.add({ title: 'Terkirim ke QC ✓', color: 'green' })
 }
 
 const submitQc = async (d: 'setuju' | 'revisi') => {
   if (!task.value) return
   saving.value = true
   if (d === 'setuju') {
-    const next: TaskStatus = task.value.status === 'qc1' ? 'produksi' : 'distribusi'
-    await tasks.updateStatus(task.value.id, next, { qc_comment: fQc.comment })
-    await wa.notifyQcApproved(task.value, actorName.value, fQc.comment)
-    toast.add({ title: `Disetujui → ${next} ✓`, color: 'green' })
+    await tasks.updateStatus(task.value.id, 'selesai', { qc_comment: fQc.comment })
+    toast.add({ title: `Disetujui → Selesai ✓`, color: 'green' })
   } else {
-    const back: TaskStatus = task.value.status === 'qc1' ? 'planning' : 'editing'
-    await tasks.updateStatus(task.value.id, back, { qc_comment: fQc.comment })
-    await wa.notifyQcRevision(task.value, actorName.value, fQc.comment)
-    toast.add({ title: 'Revisi dikirim', color: 'orange' })
+    await tasks.updateStatus(task.value.id, 'produksi', { qc_comment: fQc.comment })
+    toast.add({ title: 'Revisi dikirim ke Produksi', color: 'orange' })
   }
   fQc.comment = ''
   saving.value = false
-}
-
-const advanceStatus = async (next: TaskStatus) => {
-  if (!task.value) return
-  saving.value = true
-  await tasks.updateStatus(task.value.id, next, { qc_comment: null })
-  if (next === 'editing') await wa.notifyUploadProduksi(task.value, actorName.value)
-  if (next === 'qc2')     await wa.notifyUploadEditing(task.value, actorName.value)
-  saving.value = false
-  toast.add({ title: 'Status diperbarui ✓', color: 'green' })
-}
-
-const submitProduksi = async () => {
-  if (!task.value) return
-  if (!fProd.drive || !fProd.path.trim()) return 
-  saving.value = true
-  const finalLocation = `[${fProd.drive}] ${fProd.path.trim()}`
-  await tasks.updateStatus(task.value.id, 'editing', { file: finalLocation })
-  await wa.notifyUploadProduksi(task.value, actorName.value)
-  saving.value = false
-  toast.add({ title: 'Data file terkirim ke Editing ✓', color: 'green' })
-}
-
-const submitDistribusi = async () => {
-  if (!task.value) return
-  saving.value = true
-  await tasks.updateStatus(task.value.id, 'selesai', { skrip: fDist.link || task.value.skrip })
-  await wa.notifySelesai(task.value, actorName.value)
-  saving.value = false
-  toast.add({ title: 'Tugas selesai! 🏁', color: 'green' })
 }
 
 const handleUpload = async (e: Event) => {

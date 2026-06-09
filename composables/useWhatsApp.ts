@@ -6,10 +6,8 @@ export type WaEvent =
   | 'task_created'
   | 'planning_done'
   | 'upload_produksi'
-  | 'upload_editing'
   | 'qc_approved'
   | 'qc_revision'
-  | 'distribusi_ready'
   | 'task_selesai'
 
 interface WaPayload {
@@ -22,18 +20,13 @@ interface WaPayload {
 // ── 1. Logika Aksi Spesifik (Sesuai Tipe Tugas) ─────────────────
 const getActionLabel = (event: WaEvent, task: Task): string => {
   if (event === 'task_created') {
-    // Bedakan pesan antara tugas Admin dan Tim
     return task.type === 'admin' 
       ? 'telah menugaskan pekerjaan administrasi' 
       : 'telah membuat jadwal baru'
   }
-  if (event === 'planning_done') return 'telah menyelesaikan naskah'
-  if (event === 'qc_approved') {
-    return task.status === 'produksi' ? 'telah menyetujui konsep' : 'telah menyetujui konten final'
-  }
-  if (event === 'upload_produksi') return 'telah menyelesaikan tahap produksi'
-  if (event === 'upload_editing') return 'telah menyelesaikan tahap editing'
-  if (event === 'distribusi_ready') return 'telah mengunggah konten'
+  if (event === 'planning_done') return 'telah menyelesaikan naskah / brief'
+  if (event === 'qc_approved') return 'telah menyetujui konten final'
+  if (event === 'upload_produksi') return 'telah menyelesaikan tahap produksi & editing'
   if (event === 'qc_revision') return 'telah meminta perbaikan (Revisi)'
   if (event === 'task_selesai') return 'telah menandai tugas selesai'
   
@@ -43,17 +36,11 @@ const getActionLabel = (event: WaEvent, task: Task): string => {
 // ── 2. Logika Progres Selanjutnya ──────────
 const getDetailedNextStep = (event: WaEvent, task: Task): string => {
   switch (event) {
-    case 'task_created':    
-      // Tugas Admin tidak butuh skrip, langsung ke penyelesaian
-      return task.type === 'admin' ? 'Penyelesaian & Bukti Lampiran' : 'Pembuatan Skrip & Konsep'
-    case 'planning_done':   return 'Review Konsep (QC 1)'
-    case 'qc_approved':     
-      return task.status === 'produksi' ? 'Proses Produksi' : 'Persiapan Publikasi'
-    case 'upload_produksi': return 'Proses Editing Video/Konten'
-    case 'upload_editing':  return 'Review Hasil Final (QC 2)'
-    case 'qc_revision':     
-      return task.status === 'planning' ? 'Perbaikan Skrip' : 'Perbaikan Editing'
-    case 'distribusi_ready':return 'Arsip Dokumentasi'
+    case 'task_created':    return 'Pembuatan Skrip & Konsep'
+    case 'planning_done':   return 'Proses Produksi & Editing'
+    case 'qc_approved':     return 'Selesai 🏁'
+    case 'upload_produksi': return 'Review Hasil Final (QC)'
+    case 'qc_revision':     return 'Perbaikan Konten'
     case 'task_selesai':    return 'Selesai 🏁'
     default: return 'Cek di Aplikasi'
   }
@@ -61,17 +48,13 @@ const getDetailedNextStep = (event: WaEvent, task: Task): string => {
 
 // ── 3. Logika Tagging (Siapa yang harus lanjut) ────────────────
 const getTargetRole = (event: WaEvent, task: Task): string => {
-  if (event === 'qc_revision') return task.status === 'planning' ? 'planner' : 'editor_crew'
+  if (event === 'qc_revision') return 'production'
   
   switch (event) {
-    case 'task_created':    
-      return task.type === 'admin' ? 'admin_partnership' : 'planner'
-    case 'planning_done':   return 'ketua'
-    case 'qc_approved':     
-      return task.status === 'produksi' ? 'production' : 'admin_partnership'
-    case 'upload_produksi': return 'editor'
-    case 'upload_editing':  return 'ketua' // Balik ke QC 2
-    case 'distribusi_ready':return 'admin_partnership'
+    case 'task_created':    return 'planner'
+    case 'planning_done':   return 'production'
+    case 'qc_approved':     return 'admin_partnership'
+    case 'upload_produksi': return 'ketua'
     default: return ''
   }
 }
@@ -149,10 +132,8 @@ export const useWhatsApp = () => {
     notifyTaskCreated:    (t: Task, a: string) => sendNotif({ task: t, event: 'task_created', actor: a }),
     notifyPlanningDone:   (t: Task, a: string) => sendNotif({ task: t, event: 'planning_done', actor: a }),
     notifyUploadProduksi: (t: Task, a: string) => sendNotif({ task: t, event: 'upload_produksi', actor: a }),
-    notifyUploadEditing:  (t: Task, a: string) => sendNotif({ task: t, event: 'upload_editing', actor: a }),
     notifyQcApproved:     (t: Task, a: string, e?: string) => sendNotif({ task: t, event: 'qc_approved', actor: a, extra: e }),
     notifyQcRevision:     (t: Task, a: string, e?: string) => sendNotif({ task: t, event: 'qc_revision', actor: a, extra: e }),
-    notifyDistribusi:     (t: Task, a: string) => sendNotif({ task: t, event: 'distribusi_ready', actor: a }),
     notifySelesai:        (t: Task, a: string) => sendNotif({ task: t, event: 'task_selesai', actor: a }),
   }
 }

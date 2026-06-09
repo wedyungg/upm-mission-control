@@ -104,16 +104,15 @@ const filtered = computed(() => {
       if (statusF.value === 'selesai') return t.status === 'selesai'
       if (statusF.value === 'belum') return t.status === 'planning'
       
-      // Approval: Hanya untuk tugas TIM (QC1, QC2, Distribusi)
+      // Approval: Hanya untuk tugas TIM (QC)
       if (statusF.value === 'approval') {
-        return t.type === 'tim' && ['qc1', 'qc2', 'distribusi'].includes(t.status)
+        return t.type === 'tim' && t.status === 'qc'
       }
       
       // ✅ Solusi: Dalam Proses 
-      // Tim = produksi & editing. Admin = distribusi.
+      // Tim = produksi
       if (statusF.value === 'proses') {
-        if (t.type === 'tim') return ['produksi', 'editing'].includes(t.status)
-        if (t.type === 'admin') return t.status === 'distribusi'
+        return t.status === 'produksi'
       }
       
       return true

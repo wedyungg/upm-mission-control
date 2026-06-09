@@ -6,21 +6,21 @@ import { useHijri } from '~/composables/useHijri'
 const { approxCurrentHijriYear } = useHijri()
 
 const DEFAULT_TASKS: Task[] = [
-  { id: 't1', name: 'Fiqih - Mensucikan Najis', kat: 'Edukasi Fiqih', grade: 'A', status: 'planning', type: 'tim', deadline: new Date(Date.now() + 2 * 3600000).toISOString(), file: null, platform: 'Instagram', durasi: '1 Menit', bulan: new Date().getMonth(), hijri_year: approxCurrentHijriYear() },
-  { id: 't2', name: 'Podcast - Guru Bana Pert.', kat: 'Podcast/Reels/Carousel', grade: 'S', status: 'produksi', type: 'tim', deadline: new Date(Date.now() - 1 * 3600000).toISOString(), file: null, platform: 'YouTube', durasi: '30 Menit', bulan: new Date().getMonth(), hijri_year: approxCurrentHijriYear() },
-  { id: 't3', name: 'Dawuh Belajar - KH. Mu\'a', kat: 'Edukasi Tauhid', grade: 'B', status: 'planning', type: 'tim', deadline: new Date(Date.now() + 48 * 3600000).toISOString(), file: null, platform: 'Instagram', durasi: '1 Menit', bulan: new Date().getMonth(), hijri_year: approxCurrentHijriYear() },
-  { id: 't4', name: 'Tips Merawat Kitab Kuning', kat: 'Edukasi Kitab Kuning', grade: 'C', status: 'editing', type: 'tim', deadline: new Date(Date.now() + 72 * 3600000).toISOString(), file: 'draft_v2.mp4', platform: 'TikTok', durasi: '3 Menit', bulan: new Date().getMonth(), hijri_year: approxCurrentHijriYear() },
-  { id: 't5', name: 'Desain Flyer Event Besar', kat: 'Desain Flyer/Poster', grade: 'B', status: 'qc1', type: 'tim', deadline: new Date(Date.now() + 24 * 3600000).toISOString(), file: 'flyer_v1.png', platform: 'Instagram', durasi: '4 Slide', bulan: new Date().getMonth(), hijri_year: approxCurrentHijriYear() },
-  { id: 't6', name: 'Desain Story Ramadhan', kat: 'Desain Story', grade: 'A', status: 'qc2', type: 'tim', deadline: new Date(Date.now() + 36 * 3600000).toISOString(), file: 'story_final.png', platform: 'Instagram', durasi: '8 Slide', bulan: new Date().getMonth(), hijri_year: approxCurrentHijriYear() },
-  { id: 't7', name: 'Aset Digital PIM', kat: 'Aset Digital PIM', grade: 'A', status: 'distribusi', type: 'tim', deadline: new Date(Date.now() + 12 * 3600000).toISOString(), file: 'aset.zip', platform: 'Multi-Platform', durasi: '4 Slide', bulan: new Date().getMonth(), hijri_year: approxCurrentHijriYear() },
+  { id: 't1', name: 'Fiqih - Mensucikan Najis', kat: 'Edukasi Fiqih', grade: 'A', status: 'planning', type: 'tim', deadline: new Date(Date.now() + 2 * 3600000).toISOString(), publish_date: new Date(Date.now() + 5 * 86400000).toISOString(), assignee: 'Crew A', file: null, platform: 'Instagram', durasi: '1 Menit', bulan: new Date().getMonth(), hijri_year: approxCurrentHijriYear() },
+  { id: 't2', name: 'Podcast - Guru Bana Pert.', kat: 'Podcast/Reels/Carousel', grade: 'S', status: 'produksi', type: 'tim', deadline: new Date(Date.now() - 1 * 3600000).toISOString(), publish_date: new Date(Date.now() + 3 * 86400000).toISOString(), assignee: 'Crew B', file: null, platform: 'YouTube', durasi: '30 Menit', bulan: new Date().getMonth(), hijri_year: approxCurrentHijriYear() },
+  { id: 't3', name: 'Dawuh Belajar - KH. Mu\'a', kat: 'Edukasi Tauhid', grade: 'B', status: 'planning', type: 'tim', deadline: new Date(Date.now() + 48 * 3600000).toISOString(), publish_date: new Date(Date.now() + 7 * 86400000).toISOString(), assignee: 'Crew C', file: null, platform: 'Instagram', durasi: '1 Menit', bulan: new Date().getMonth(), hijri_year: approxCurrentHijriYear() },
+  { id: 't4', name: 'Tips Merawat Kitab Kuning', kat: 'Edukasi Kitab Kuning', grade: 'C', status: 'produksi', type: 'tim', deadline: new Date(Date.now() + 72 * 3600000).toISOString(), publish_date: new Date(Date.now() + 10 * 86400000).toISOString(), assignee: 'Crew A', file: 'draft_v2.mp4', platform: 'TikTok', durasi: '3 Menit', bulan: new Date().getMonth(), hijri_year: approxCurrentHijriYear() },
+  { id: 't5', name: 'Desain Flyer Event Besar', kat: 'Desain Flyer/Poster', grade: 'B', status: 'qc', type: 'tim', deadline: new Date(Date.now() + 24 * 3600000).toISOString(), publish_date: new Date(Date.now() + 4 * 86400000).toISOString(), assignee: 'Crew B', file: 'flyer_v1.png', platform: 'Instagram', durasi: '4 Slide', bulan: new Date().getMonth(), hijri_year: approxCurrentHijriYear() },
+  { id: 't6', name: 'Desain Story Ramadhan', kat: 'Desain Story', grade: 'A', status: 'qc', type: 'tim', deadline: new Date(Date.now() + 36 * 3600000).toISOString(), publish_date: new Date(Date.now() + 6 * 86400000).toISOString(), assignee: 'Crew C', file: 'story_final.png', platform: 'Instagram', durasi: '8 Slide', bulan: new Date().getMonth(), hijri_year: approxCurrentHijriYear() },
+  { id: 't7', name: 'Aset Digital PIM', kat: 'Aset Digital PIM', grade: 'A', status: 'selesai', type: 'tim', deadline: new Date(Date.now() + 12 * 3600000).toISOString(), publish_date: new Date(Date.now() + 2 * 86400000).toISOString(), assignee: 'Crew A', file: 'aset.zip', platform: 'Multi-Platform', durasi: '4 Slide', bulan: new Date().getMonth(), hijri_year: approxCurrentHijriYear() },
   { id: 'a1', name: 'Pengelolaan Anggaran Q4', kat: 'Pengelolaan Anggaran', grade: 'S', status: 'planning', type: 'admin', deadline: new Date(Date.now() + 12 * 3600000).toISOString(), file: null, bulan: new Date().getMonth(), hijri_year: approxCurrentHijriYear() },
-  { id: 'a2', name: 'Laporan Keuangan November', kat: 'Laporan Keuangan', grade: 'A', status: 'qc2', type: 'admin', deadline: new Date(Date.now() + 36 * 3600000).toISOString(), file: 'laporan.pdf', bulan: new Date().getMonth(), hijri_year: approxCurrentHijriYear() },
+  { id: 'a2', name: 'Laporan Keuangan November', kat: 'Laporan Keuangan', grade: 'A', status: 'selesai', type: 'admin', deadline: new Date(Date.now() + 36 * 3600000).toISOString(), file: 'laporan.pdf', bulan: new Date().getMonth(), hijri_year: approxCurrentHijriYear() },
   { id: 'a3', name: 'Surat Menyurat Penting', kat: 'Surat Menyurat Penting', grade: 'B', status: 'planning', type: 'admin', deadline: new Date(Date.now() + 8 * 3600000).toISOString(), file: null, bulan: new Date().getMonth(), hijri_year: approxCurrentHijriYear() },
 ]
 
 // Kolom yang ada di tabel Supabase — strip kolom lain sebelum upsert
 const SUPABASE_COLUMNS: (keyof Task)[] = [
-  'id', 'name', 'kat', 'grade', 'status', 'type', 'deadline',
+  'id', 'name', 'kat', 'grade', 'status', 'type', 'deadline', 'publish_date', 'assignee',
   'file', 'file_drive_id', 'platform', 'durasi', 'skrip', 'konsep',
   'qc_comment', 'bulan', 'hijri_year', 'progja_id',
   'created_at', 'updated_at', 'created_by',
@@ -104,10 +104,8 @@ const updateStatus = async (id: string, status: TaskStatus, extra?: Partial<Task
   // Menambah durasi deadline secara otomatis berdasarkan tahap
   if (status === 'produksi') {
     updatedExtra.deadline = new Date(now + 48 * 3600000).toISOString(); // +2 Hari
-  } else if (status === 'editing') {
+  } else if (status === 'qc') {
     updatedExtra.deadline = new Date(now + 24 * 3600000).toISOString(); // +1 Hari
-  } else if (status === 'qc2') {
-    updatedExtra.deadline = new Date(now + 12 * 3600000).toISOString(); // +12 Jam
   }
 
   return upsertTask({ id, status, updated_at: new Date().toISOString(), ...updatedExtra });
@@ -139,9 +137,9 @@ const updateStatus = async (id: string, status: TaskStatus, extra?: Partial<Task
  // ─── Stats ────────────────────────────────────────────
   const getStats = (month?: number): StatSummary => {
     const list     = month !== undefined ? byMonth(month) : tasks.value
-    const selesai  = list.filter(t => ['distribusi', 'selesai'].includes(t.status)).length
-    const proses   = list.filter(t => ['produksi', 'editing'].includes(t.status)).length
-    const approval = list.filter(t => ['qc1', 'qc2'].includes(t.status)).length
+    const selesai  = list.filter(t => t.status === 'selesai').length
+    const proses   = list.filter(t => t.status === 'produksi').length
+    const approval = list.filter(t => t.status === 'qc').length
     const belum    = list.filter(t => t.status === 'planning').length
     const total    = list.length
     return { belum, proses, approval, selesai, total, pct: total ? Math.round((selesai / total) * 100) : 0 }
@@ -155,14 +153,14 @@ const updateStatus = async (id: string, status: TaskStatus, extra?: Partial<Task
       .from('tasks')
       .select('*', { count: 'exact', head: true })
       .eq('hijri_year', hijriYear)
-      .in('status', ['distribusi', 'selesai'])
+      .eq('status', 'selesai')
     
     annualSelesaiCount.value = count || 0
   }
 
   // ─── Progja helper (legacy, masih dipakai) ────────────
   const getSisaProgja = (type: TaskType, targets: { grade: TaskGrade; target: number }[]) => {
-    const done = tasks.value.filter(t => t.type === type && ['distribusi', 'selesai'].includes(t.status))
+    const done = tasks.value.filter(t => t.type === type && t.status === 'selesai')
     return targets.map(p => ({
       grade: p.grade, target: p.target,
       done:  done.filter(t => t.grade === p.grade).length,

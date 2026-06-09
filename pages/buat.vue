@@ -75,6 +75,21 @@
         </div>
 
         <div class="ff">
+          <label class="fl">Assignee (Crew)</label>
+          <IosSelect 
+            v-model="fTim.assignee" 
+            :options="crewOptions" 
+            placeholder="-- Pilih Crew --" 
+            label="Daftar Crew" 
+          />
+        </div>
+
+        <div class="ff">
+          <label class="fl">Target Tayang (Publish Date)</label>
+          <input v-model="fTim.publish_date" type="date" class="fi">
+        </div>
+
+        <div class="ff">
           <label class="fl">Platform</label>
           <IosSelect 
             v-model="fTim.platform" 
@@ -266,6 +281,10 @@ const KAT_ADMIN = [
 const PLATFORMS = ['Instagram', 'YouTube', 'TikTok', 'Facebook', 'Multi-Platform']
 const DURASI    = ['1 Menit', '3 Menit', '5 Menit', '10 Menit', '30 Menit', '4 Slide', '8 Slide', '12 Slide']
 
+const crewOptions = computed(() => {
+  return auth.USERS.map(u => ({ value: u.name, label: u.name }))
+})
+
 // ── Form states ──────────────────────────────────────────────
 const fTim = reactive({
   grade: 'A' as TaskGrade,
@@ -276,6 +295,8 @@ const fTim = reactive({
   deadlineH: 72,
   skrip: '',
   progja_id: '',   // id dari ProgjaItem yang dipilih
+  assignee: '',
+  publish_date: '',
 })
 
 const fAdmin = reactive({
@@ -345,6 +366,8 @@ const submit = async () => {
       durasi:     fTim.durasi,
       skrip:      fTim.skrip,
       progja_id:  fTim.progja_id  || undefined,
+      assignee:   fTim.assignee || undefined,
+      publish_date: fTim.publish_date ? new Date(fTim.publish_date).toISOString() : undefined,
       bulan,
       hijri_year: hy,
     })
@@ -359,9 +382,10 @@ const submit = async () => {
       name:       fAdmin.name.trim(),
       kat:        fAdmin.kat,
       grade:      fAdmin.grade,
-      status:     'distribusi', // <--- DIUBAH DARI 'selesai'
+      status:     'selesai', // <--- DIUBAH DARI 'distribusi'
       type:       'admin',
       deadline:   new Date(now + fAdmin.deadlineH * 3600000).toISOString(),
+      publish_date: new Date(now + fAdmin.deadlineH * 3600000).toISOString(),
       file:       fAdmin.link  || null,
       progja_id:  fAdmin.progja_id || undefined,
       bulan,
@@ -381,6 +405,8 @@ const resetForm = () => {
   showSuccess.value = false
   fTim.name      = ''
   fTim.progja_id = ''
+  fTim.assignee  = ''
+  fTim.publish_date = ''
   fAdmin.name      = ''
   fAdmin.link      = ''
   fAdmin.progja_id = ''

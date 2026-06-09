@@ -94,6 +94,11 @@
 </div>
     </div>
 
+    <!-- Weekly Target Tracker -->
+    <div class="px-4 mb-2">
+      <DashboardWeeklyTracker />
+    </div>
+
     <!-- Workflow Stepper -->
     <div class="flex items-center justify-between px-4 mt-1 mb-2.5">
       <h2 class="text-base font-bold text-[var(--text-primary)]">Alur Kerja</h2>
@@ -154,6 +159,7 @@ import { useTasksStore } from '~/stores/tasks'
 import { useHijri }      from '~/composables/useHijri'
 import { useProgjaStore } from '~/stores/progja'
 import UiGradeBadge      from '~/components/ui/GradeBadge.vue'
+import DashboardWeeklyTracker from '~/components/dashboard/WeeklyTracker.vue'
 
 // 1. Inisialisasi Store dan Composable
 const tasks = useTasksStore()
@@ -214,12 +220,10 @@ const stats = computed(() => {
   tasksBulanIni.forEach(t => {
     if (t.status === 'selesai') {
       countSelesai++
-    } else if (t.type === 'tim' && ['qc1', 'qc2', 'distribusi'].includes(t.status)) {
+    } else if (t.status === 'qc') {
       countApproval++
-    } else if (t.type === 'tim' && ['produksi', 'editing'].includes(t.status)) {
+    } else if (t.status === 'produksi') {
       countProses++
-    } else if (t.type === 'admin' && t.status === 'distribusi') {
-      countProses++ // ✅ Solusi: Admin 'distribusi' masuk hitungan proses
     }
   })
   
@@ -252,11 +256,8 @@ const circleOffset = computed(() => CIRC - (pct.value / 100) * CIRC)
 // Alur Kerja
 const STEPS = [
   { key: 'planning',   label: 'Planning'   },
-  { key: 'qc1',        label: 'QC 1'       },
   { key: 'produksi',   label: 'Produksi'   },
-  { key: 'editing',    label: 'Edit'       },
-  { key: 'qc2',        label: 'QC 2'       },
-  { key: 'distribusi', label: 'Distribusi' },
+  { key: 'qc',         label: 'QC'         },
 ] as const
 
 const stepItems = (key: string) =>
@@ -278,11 +279,10 @@ const inProgress = computed(() =>
     if (t.bulan !== activeMonth.value) return false
     
     if (t.type === 'admin') {
-      // Untuk tugas admin, tampilkan yang sedang di tahap penyelesaian ('distribusi')
-      return t.status === 'distribusi'
+      return false // Admin tasks go straight to selesai so no progress state
     } else {
       // Untuk tugas tim, tampilkan yang sedang diproses
-      return ['produksi','editing','qc2'].includes(t.status)
+      return ['produksi', 'qc'].includes(t.status)
     }
   })
 )

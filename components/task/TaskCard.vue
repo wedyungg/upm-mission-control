@@ -13,9 +13,11 @@
       </div>
     </div>
 
-    <p class="text-xs text-[var(--text-secondary)] mb-1.5 pl-8">
-      {{ task.durasi ?? task.kat }}
-    </p>
+    <div class="flex flex-wrap gap-2 text-xs text-[var(--text-secondary)] mb-1.5 pl-8">
+      <span>{{ task.durasi ?? task.kat }}</span>
+      <span v-if="task.assignee" class="px-1.5 py-0.5 rounded bg-[var(--bg-elevated)] border border-[var(--border)]">🧑‍💻 {{ task.assignee }}</span>
+      <span v-if="task.publish_date" class="px-1.5 py-0.5 rounded bg-[var(--bg-elevated)] border border-[var(--border)] text-blue-500">Tayang: {{ new Date(task.publish_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) }}</span>
+    </div>
 
     <div class="flex items-center justify-between pl-8">
       <p class="text-xs text-[var(--text-muted)]">{{ STATUS_LABEL[task.status] }}</p>
@@ -43,11 +45,8 @@ defineEmits<{ click: [task: Task] }>()
 
 const STATUS_LABEL: Record<TaskStatus, string> = {
   planning:   'Planning',
-  qc1:        'QC 1',
-  produksi:   'In-Production',
-  editing:    'Editing',
-  qc2:        'QC 2',
-  distribusi: 'Distribution',
+  produksi:   'Produksi & Edit',
+  qc:         'Quality Control',
   selesai:    'Selesai',
 }
 </script>

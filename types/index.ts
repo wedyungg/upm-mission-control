@@ -27,11 +27,8 @@ export interface AppUser {
 
 export type TaskStatus =
   | 'planning'
-  | 'qc1'
   | 'produksi'
-  | 'editing'
-  | 'qc2'
-  | 'distribusi'
+  | 'qc'
   | 'selesai'
 
 export type TaskType = 'tim' | 'admin'
@@ -59,6 +56,8 @@ export interface Task {
   status: TaskStatus
   type: TaskType
   deadline: string
+  publish_date?: string
+  assignee?: string
   file: string | null
   file_drive_id?: string
   platform?: string
