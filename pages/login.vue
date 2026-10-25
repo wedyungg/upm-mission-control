@@ -1,6 +1,6 @@
 <template>
   <!-- Full-screen shell — responsive Apple HIG login -->
-  <div class="min-h-dvh bg-[var(--bg-base)] flex flex-col items-center justify-center relative overflow-y-auto px-5 py-10">
+  <div class="w-full min-h-dvh flex-1 bg-[var(--bg-base)] flex flex-col items-center justify-center relative overflow-y-auto px-5 py-10">
 
     <!-- Top-right Theme Toggle -->
     <div class="fixed top-4 right-4 sm:top-6 sm:right-6 z-20">

@@ -148,11 +148,13 @@ export const useAuthStore = defineStore('auth', () => {
 
     if (error) {
       console.error('Login error:', error.message)
-      // Memoles pesan error bahasa Inggris dari Supabase
-      if (error.message.includes('Invalid login credentials')) {
+      if (error.message.includes('Invalid login credentials') || error.message.includes('invalid_credentials')) {
         return { success: false, error: 'Kata sandi salah.' }
       }
-      return { success: false, error: 'Terjadi kesalahan sistem.' }
+      if (error.message.includes('Failed to fetch') || error.message.includes('fetch')) {
+        return { success: false, error: 'Gagal terhubung ke database. Mohon periksa koneksi internet.' }
+      }
+      return { success: false, error: error.message || 'Terjadi kesalahan sistem.' }
     }
 
     // Jika sukses, sinkronkan dengan state lokal

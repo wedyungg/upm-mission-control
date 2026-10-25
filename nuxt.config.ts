@@ -1,4 +1,14 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+const defaultSupabaseUrl = 'https://zfngjgcuznqixulfrhec.supabase.co'
+const defaultSupabaseKey = 'sb_publishable_X23l7Hab27PdcB2i8ceEoQ__l49f_6l'
+
+// Guard against obsolete dead Supabase URL in environment variables
+const supabaseUrl = (!process.env.SUPABASE_URL || process.env.SUPABASE_URL.includes('uixvorekmbopxiotehgh'))
+  ? defaultSupabaseUrl
+  : process.env.SUPABASE_URL
+
+const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || defaultSupabaseKey
+
 export default defineNuxtConfig({
   devtools: { enabled: true },
 
@@ -16,8 +26,8 @@ export default defineNuxtConfig({
   },
 
   supabase: {
-    url: process.env.SUPABASE_URL,
-    key: process.env.SUPABASE_ANON_KEY,
+    url: supabaseUrl,
+    key: supabaseKey,
     redirectOptions: {
       login: '/login',
       callback: '/confirm',
@@ -25,7 +35,7 @@ export default defineNuxtConfig({
     },
   },
 
-runtimeConfig: {
+  runtimeConfig: {
     // 🔒 PRIVATE SECTON: Aman, hanya bisa dibaca oleh server (Edge Functions / API Routes)
     waToken: process.env.WA_TOKEN ?? '',
     waTarget: process.env.WA_TARGET ?? '',
@@ -36,7 +46,7 @@ runtimeConfig: {
       googleClientId:        process.env.GOOGLE_CLIENT_ID          ?? '',
       googleDriveFolderId:   process.env.GOOGLE_DRIVE_FOLDER_ID    ?? '',
       googleDriveFolderName: process.env.GOOGLE_DRIVE_FOLDER_NAME  ?? 'SISTEM DASHBOARD UPM',
-      supabaseUrl:           process.env.SUPABASE_URL,
+      supabaseUrl:           supabaseUrl,
     },
   },
 
