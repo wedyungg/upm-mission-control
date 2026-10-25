@@ -7,6 +7,7 @@ export type UserRole =
   | 'production'
   | 'admin_partnership'
   | 'editor_crew'
+  | 'tester'
 
 export type UserAccess = 'read-only' | 'full' | 'limited'
 
@@ -17,11 +18,14 @@ export interface AppUser {
   name: string
   role: UserRole
   roleLabel: string
+  rubrik?: string
+  weeklyTarget?: number
   initials: string
   color: string
   bg: string
   access: UserAccess
   tabAccess: TabAccess[]
+  phone?: string
   supabaseId?: string
 }
 

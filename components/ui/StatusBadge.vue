@@ -5,7 +5,10 @@
 import type { TaskStatus } from '~/types'
 defineProps<{ status: TaskStatus }>()
 const LABELS: Record<TaskStatus, string> = {
-  planning:'Planning', produksi:'Produksi', qc:'QC', selesai:'Selesai',
+  planning: 'Rencana',
+  produksi: 'Ambil & Edit',
+  qc: 'Review QC',
+  selesai: 'Tayang',
 }
 </script>
 <style scoped>

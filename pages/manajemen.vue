@@ -42,7 +42,7 @@
       <!-- Kinerja Individu (5 cols on desktop) -->
       <div class="card lg:col-span-5">
         <div class="flex items-center justify-between mb-4 pb-3 border-b border-[var(--border)]">
-          <p class="slabel !mb-0">Kinerja & Beban Individu</p>
+          <p class="slabel !mb-0">Kinerja Tim Rubrik</p>
           <span class="text-xs font-mono text-[var(--text-muted)]">{{ HIJRI_MONTHS_ID[activeMonth] }}</span>
         </div>
         <div v-for="m in displayMembers" :key="m.id"
@@ -50,13 +50,13 @@
           <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0"
             :style="{ background: m.bg, color: m.color }">{{ m.initials }}</div>
           <div class="flex-1 min-w-0">
-            <div class="flex items-center justify-between mb-0.5">
+            <div class="flex items-center justify-between mb-0.5 gap-2">
               <p class="text-sm font-semibold text-[var(--text-primary)] truncate">{{ m.name }}</p>
               <span class="text-xs font-bold px-2.5 py-0.5 rounded-full flex-shrink-0" :class="loadCls(m.load)">
-                {{ loadLbl(m.load) }}
+                {{ m.doneCount }}/{{ m.monthlyTarget }} Tayang
               </span>
             </div>
-            <p class="text-xs text-[var(--text-secondary)]">{{ m.roleLabel }}</p>
+            <p class="text-xs text-[var(--text-secondary)]">{{ m.rubrik || m.roleLabel }} · {{ m.totalCount }} konten bulan ini</p>
             <div class="flex items-center gap-2.5 mt-2">
               <div class="flex-1 h-2 bg-[var(--bg-elevated)] rounded-full overflow-hidden min-w-0">
                 <div class="h-full rounded-full transition-[width] duration-700"
@@ -200,50 +200,24 @@ onMounted(() => {
   progja.fetchProgja(approxCurrentHijriYear())
 })
 
-const GRADE_POINTS: Record<string, number> = {
-  'S': 5,
-  'A': 3,
-  'B': 2,
-  'C': 1
-};
-
-const ROLE_MULTIPLIER: Record<string, number> = {
-  planner: 1.0,           
-  admin_partnership: 1.1, 
-  production: 1.5,        
-  editor_crew: 1.4        
-};
-
-const MAX_POINT_CAPACITY = 20;
-
-const ROLE_TASK_MAP: Record<string, TaskStatus[]> = {
-  planner: ['planning', 'qc'],
-  production: ['produksi'],
-  admin_partnership: ['selesai'],
-  editor_crew: ['produksi']
-};
-
 const displayMembers = computed(() => {
-  return USERS.filter(u => Object.keys(ROLE_TASK_MAP).includes(u.role)).map(user => {
-    const relevantStatuses = ROLE_TASK_MAP[user.role] || [];
-    const multiplier = ROLE_MULTIPLIER[user.role] || 1.0;
-    
-    const totalPoints = tasks.tasks
-      .filter(t => relevantStatuses.includes(t.status) && t.bulan === activeMonth.value)
-      .reduce((sum, task) => {
-        const basePoint = GRADE_POINTS[task.grade] || 1;
-        return sum + (basePoint * multiplier);
-      }, 0);
+  return USERS.filter(u => !!u.rubrik).map(user => {
+    const monthlyTarget = (user.weeklyTarget || 2) * 4;
+    const memberTasks = tasks.tasks.filter(t => {
+      if (t.bulan !== activeMonth.value) return false;
+      return t.assignee === user.name || (!t.assignee && user.rubrik && t.kat === user.rubrik);
+    });
 
-    const load = Math.min(100, Math.round((totalPoints / MAX_POINT_CAPACITY) * 100));
+    const totalCount = memberTasks.length;
+    const doneCount  = memberTasks.filter(t => t.status === 'selesai').length;
+    const load       = Math.min(100, Math.round((doneCount / monthlyTarget) * 100));
 
-    return { ...user, load };
+    return { ...user, totalCount, doneCount, monthlyTarget, load };
   });
 });
 
-const barColor = (l: number) => l >= 80 ? 'var(--red)' : l >= 60 ? 'var(--yellow)' : 'var(--green)';
-const loadCls  = (l: number) => l >= 80 ? 'load-danger' : l >= 60 ? 'load-warning' : 'load-normal';
-const loadLbl  = (l: number) => l >= 80 ? 'Overload'   : l >= 60 ? 'Sibuk'         : 'Normal';
+const barColor = (l: number) => l >= 75 ? 'var(--green)' : l >= 40 ? 'var(--accent)' : 'var(--yellow)';
+const loadCls  = (l: number) => l >= 75 ? 'load-normal'  : l >= 40 ? 'load-normal'   : 'load-warning';
 
 const doneTasks = computed(() =>
   tasks.tasks.filter(t => t.status === 'selesai')
@@ -256,15 +230,15 @@ const sisaAdmin = computed(() =>
   progja.getSisaByGrade('admin', doneTasks.value)
 )
 
-const canCreateTim   = computed(() => ['ketua', 'planner'].includes(auth.currentUser?.role ?? ''))
-const canCreateAdmin = computed(() => ['ketua', 'admin_partnership'].includes(auth.currentUser?.role ?? ''))
+const canCreateTim   = computed(() => auth.currentUser?.access !== 'read-only')
+const canCreateAdmin = computed(() => ['ketua', 'admin_partnership', 'tester'].includes(auth.currentUser?.role ?? '') || auth.currentUser?.id === 'ziyan')
 
 interface ATab { key: TabAccess; label: string; statuses: TaskStatus[] }
 const ALL_TABS: ATab[] = [
-  { key: 'planner',    label: 'Planner',  statuses: ['planning']    },
-  { key: 'production', label: 'Produksi', statuses: ['produksi']    },
-  { key: 'qc',         label: 'QC',       statuses: ['qc']          },
-  { key: 'publisher',  label: 'Selesai',  statuses: ['selesai']     },
+  { key: 'planner',    label: 'Rencana',   statuses: ['planning'] },
+  { key: 'production', label: 'Produksi',  statuses: ['produksi'] },
+  { key: 'qc',         label: 'Review',    statuses: ['qc']       },
+  { key: 'publisher',  label: 'Tayang',    statuses: ['selesai']  },
 ]
 const activeTab = ref<TabAccess>('planner')
 const tabCount  = (tab: ATab) =>

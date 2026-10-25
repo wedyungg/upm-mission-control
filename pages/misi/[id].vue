@@ -64,11 +64,11 @@
         <template v-if="task.status === 'planning'">
           <div class="step-bar mb-3">
             <div class="step-dot dot-active">1</div>
-            <p class="text-sm font-bold text-[var(--accent)]">Tahap 1 · Planning & Naskah</p>
+            <p class="text-sm font-bold text-[var(--accent)]">Tahap 1 · Rencana</p>
           </div>
           <div class="card">
-            <p class="slabel">Form Planning</p>
-            <p v-if="!auth.hasTabAccess('planner')" class="hint">Akses khusus peran Planner.</p>
+            <p class="slabel">Detail Rencana</p>
+            <p v-if="!auth.hasTabAccess('planner')" class="hint">Mode pantau (Read-Only).</p>
             <template v-else>
               <div v-if="task.qc_comment" class="mb-4 p-3.5 bg-red-500/10 border border-red-500/20 rounded-xl">
                 <p class="text-xs font-bold text-[var(--red)] mb-1">Catatan Revisi:</p>
@@ -76,22 +76,22 @@
               </div>
 
               <div class="ff">
-                <label class="fl">Konsep / Brief *</label>
-                <textarea v-model="fP.konsep" class="fi" rows="4" placeholder="Tuliskan konsep, angle cerita, atau poin pembahasan..."/>
+                <label class="fl">Konsep / Poin Pembahasan *</label>
+                <textarea v-model="fP.konsep" class="fi" rows="4" placeholder="Tuliskan poin konsep konten, kutipan, atau ide pembahasan..."/>
               </div>
               <div class="ff">
-                <label class="fl">Link Skrip (Google Docs)</label>
+                <label class="fl">Tautan Catatan / Skrip (Opsional)</label>
                 <input v-model="fP.skrip" type="url" class="fi" placeholder="https://docs.google.com/..."/>
               </div>
               <div class="ff">
-                <label class="fl">Target Deadline Produksi</label>
+                <label class="fl">Target Selesai Produksi</label>
                 <select v-model="fP.deadlineH" class="fi">
                   <option :value="24">1 Hari</option><option :value="48">2 Hari</option><option :value="72">3 Hari</option><option :value="168">1 Minggu</option>
                 </select>
               </div>
               <p v-if="formErr" class="text-xs text-[var(--red)] mb-3">{{ formErr }}</p>
               <button class="btn-primary" :disabled="saving" @click="submitPlanning">
-                {{ saving ? 'Menyimpan...' : 'Selesaikan Planning & Lanjut ke Produksi' }}
+                {{ saving ? 'Menyimpan...' : 'Simpan & Lanjut Produksi' }}
               </button>
             </template>
           </div>
@@ -101,18 +101,18 @@
         <template v-else-if="task.status === 'produksi'">
           <div class="step-bar mb-3">
             <div class="step-dot dot-active">2</div>
-            <p class="text-sm font-bold text-[var(--accent)]">Tahap 2 · Produksi & Editing</p>
+            <p class="text-sm font-bold text-[var(--accent)]">Tahap 2 · Produksi & Edit</p>
           </div>
           <div class="card">
-            <p class="slabel">Proses Pembuatan Konten</p>
+            <p class="slabel">Produksi & Penyuntingan</p>
             
             <div class="prev-box mb-4">
-              <p class="text-xs font-semibold text-[var(--text-secondary)] mb-1">Konsep / Brief:</p>
+              <p class="text-xs font-semibold text-[var(--text-secondary)] mb-1">Konsep / Poin Pembahasan:</p>
               <p class="text-xs text-[var(--text-secondary)] leading-relaxed">{{ task.konsep || '(belum ada konsep)' }}</p>
-              <a v-if="task.skrip" :href="task.skrip" target="_blank" class="text-xs font-semibold text-[var(--accent)] hover:underline mt-2 inline-block">Buka Skrip di Google Docs</a>
+              <a v-if="task.skrip" :href="task.skrip" target="_blank" class="text-xs font-semibold text-[var(--accent)] hover:underline mt-2 inline-block">Buka Dokumen Skrip</a>
             </div>
 
-            <p v-if="!auth.hasTabAccess('production')" class="hint">Akses khusus tim Produksi.</p>
+            <p v-if="!auth.hasTabAccess('production')" class="hint">Mode pantau (Read-Only).</p>
             <template v-else>
               <div v-if="task.qc_comment" class="mb-4 p-3.5 bg-red-500/10 border border-red-500/20 rounded-xl">
                 <p class="text-xs font-bold text-[var(--red)] mb-1">Catatan Revisi QC:</p>
@@ -122,47 +122,47 @@
               <TaskFileChip v-if="task.file" :name="task.file" :drive-id="task.file_drive_id" />
               
               <div class="ff mt-3">
-                <label class="fl">Catatan / Link Final (opsional)</label>
-                <textarea v-model="fProd.note" class="fi" rows="2" placeholder="Tulis keterangan atau link tambahan..."/>
+                <label class="fl">Catatan Hasil / Tautan Konten (opsional)</label>
+                <textarea v-model="fProd.note" class="fi" rows="2" placeholder="Tuliskan keterangan file atau link tambahan..."/>
               </div>
 
-              <TaskUploadZone :for-id="`fe-${task.id}`" label="Upload Hasil Akhir" sub="Video / Gambar yang siap direview QC" />
+              <TaskUploadZone :for-id="`fe-${task.id}`" label="Unggah File Final" sub="Video atau gambar siap tayang (tersimpan di Google Drive)" />
               <input :id="`fe-${task.id}`" type="file" class="hidden" accept="video/*,image/*,.pdf,.zip" @change="handleUpload($event)"/>
               <TaskUploadProgress v-if="uploading" :pct="uploadPct" :path="drivePath" />
               
               <div v-if="!uploading" class="mt-4">
                 <button class="btn-primary w-full" :disabled="saving || (!task.file && !fProd.note)" @click="submitProduksi">
-                  Selesaikan Produksi & Kirim ke QC
+                  Selesaikan Produksi & Kirim ke Review
                 </button>
               </div>
             </template>
           </div>
         </template>
 
-        <!-- TAHAP 3: QC (Quality Control) -->
+        <!-- TAHAP 3: QC (Quality Control & Posting) -->
         <template v-else-if="task.status === 'qc'">
           <div class="step-bar mb-3">
             <div class="step-dot dot-active">3</div>
-            <p class="text-sm font-bold text-[var(--accent)]">Tahap 3 · Quality Control</p>
+            <p class="text-sm font-bold text-[var(--accent)]">Tahap 3 · Review & Publikasi</p>
           </div>
           <div class="card">
-            <p class="slabel">Review Konten Final</p>
+            <p class="slabel">Pemeriksaan Kualitas & Konfirmasi Tayang</p>
             
             <div class="prev-box mb-4">
-              <p class="text-xs text-[var(--text-muted)] mb-1.5">File yang disubmit:</p>
+              <p class="text-xs text-[var(--text-muted)] mb-1.5">File hasil produksi & edit:</p>
               <TaskFileChip v-if="task.file" :name="task.file" :drive-id="task.file_drive_id" :inline="true" />
               <p v-if="task.produksi_note" class="text-xs text-[var(--accent)] mt-2">{{ task.produksi_note }}</p>
             </div>
 
-            <p v-if="!auth.hasTabAccess('qc')" class="hint">Akses khusus tim Quality Control.</p>
+            <p v-if="!auth.hasTabAccess('qc')" class="hint">Akses khusus Review / PIC.</p>
             <div v-else>
               <div class="ff">
-                <label class="fl">Komentar QC</label>
-                <textarea v-model="fQc.comment" class="fi" rows="3" placeholder="Catatan jika ada revisi atau masukan..."/>
+                <label class="fl">Catatan Review / Tautan Postingan (Opsional)</label>
+                <textarea v-model="fQc.comment" class="fi" rows="3" placeholder="Catatan revisi atau link postingan di akun Matholek..."/>
               </div>
               <div class="flex gap-3">
                 <button class="btn-danger flex-1" :disabled="saving" @click="submitQc('revisi')">Minta Revisi</button>
-                <button class="btn-success flex-1" :disabled="saving" @click="submitQc('setuju')">Setujui & Selesaikan</button>
+                <button class="btn-success flex-1" :disabled="saving" @click="submitQc('setuju')">Setujui & Tandai Tayang</button>
               </div>
             </div>
           </div>
@@ -174,7 +174,7 @@
             <div class="w-16 h-16 rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)] flex items-center justify-center mx-auto mb-4">
               <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4L12 14.01l-3-3"/></svg>
             </div>
-            <p class="text-lg font-bold text-[var(--text-primary)] mb-1">Tugas Telah Selesai</p>
+            <p class="text-lg font-bold text-[var(--text-primary)] mb-1">Konten Telah Tayang</p>
             <p class="text-xs text-[var(--text-muted)]">File / Bukti: {{ task.file ?? '—' }}</p>
             <p v-if="task.publish_date" class="text-xs text-[var(--accent)] mt-2.5 font-semibold">Jadwal tayang: {{ new Date(task.publish_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) }}</p>
           </div>

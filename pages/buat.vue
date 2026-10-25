@@ -60,42 +60,68 @@
 
       <!-- ── FORM TIM ── -->
       <div v-if="!showSuccess && taskType === 'tim' && canCreateTim" class="card">
-        <div class="card-title">Detail Tugas Tim / Konten</div>
+        <div class="card-title">Detail Konten</div>
 
-        <!-- Progja selector -->
-        <div class="ff">
-          <label class="fl">Program Kerja (Progja)</label>
-          <IosSelect 
-            v-model="fTim.progja_id" 
-            :options="progjaTimOptions.map(p => ({ value: p.id, label: `(${p.grade}) - ${p.nama || (p as any).name}` }))" 
-            placeholder="-- Pilih Program Kerja --" 
-            label="Daftar Progja" 
-            @change="onProgjaChange"
-          />
-          <div v-if="err.progja" class="ferr">{{ err.progja }}</div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="ff">
+            <label class="fl">Penanggung Jawab</label>
+            <IosSelect 
+              v-model="fTim.assignee" 
+              :options="crewOptions" 
+              placeholder="Pilih penanggung jawab" 
+              label="Pilih Penanggung Jawab"
+              @update:model-value="onAssigneeChange"
+            />
+          </div>
+
+          <div class="ff">
+            <label class="fl">Rubrik Konten</label>
+            <IosSelect 
+              v-model="fTim.kat" 
+              :options="KAT_TIM" 
+              label="Pilih Rubrik Konten" 
+            />
+          </div>
         </div>
 
         <div class="ff">
           <label class="fl">Judul Konten *</label>
-          <input v-model="fTim.name" type="text" class="fi" placeholder="Masukkan judul konten...">
+          <input v-model="fTim.name" type="text" class="fi" placeholder="Contoh: Dawuh KH. Ahmad tentang Adab Menuntut Ilmu...">
           <div v-if="err.name" class="ferr">{{ err.name }}</div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div class="ff">
-            <label class="fl">Assignee (Crew)</label>
-            <IosSelect 
-              v-model="fTim.assignee" 
-              :options="crewOptions" 
-              placeholder="-- Pilih Crew --" 
-              label="Daftar Crew" 
-            />
+            <label class="fl">Target Tayang</label>
+            <input v-model="fTim.publish_date" type="date" class="fi">
           </div>
 
           <div class="ff">
-            <label class="fl">Target Tayang (Publish Date)</label>
-            <input v-model="fTim.publish_date" type="date" class="fi">
+            <label class="fl">Grade Konten</label>
+            <IosSelect 
+              v-model="fTim.grade" 
+              :options="[
+                { value: 'S', label: 'Grade S · Produksi Spesial (5 poin)' },
+                { value: 'A', label: 'Grade A · Produksi Utama (3 poin)' },
+                { value: 'B', label: 'Grade B · Konten Menengah (2 poin)' },
+                { value: 'C', label: 'Grade C · Konten Ringan (1 poin)' }
+              ]" 
+              label="Pilih Grade Konten" 
+            />
           </div>
+        </div>
+
+        <!-- Progja selector (opsional) -->
+        <div class="ff">
+          <label class="fl">Program Kerja Tahunan (Opsional)</label>
+          <IosSelect 
+            v-model="fTim.progja_id" 
+            :options="[{ value: '', label: 'Tanpa Program Kerja Khusus' }, ...progjaTimOptions.map(p => ({ value: p.id, label: `(${p.grade}) - ${p.nama || (p as any).name}` }))]" 
+            placeholder="Pilih program kerja" 
+            label="Daftar Program Kerja" 
+            @change="onProgjaChange"
+          />
+          <div v-if="err.progja" class="ferr">{{ err.progja }}</div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -109,7 +135,7 @@
           </div>
 
           <div class="ff">
-            <label class="fl">Durasi / Slide</label>
+            <label class="fl">Durasi / Format</label>
             <IosSelect 
               v-model="fTim.durasi" 
               :options="DURASI" 
@@ -120,7 +146,7 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div class="ff">
-            <label class="fl">Deadline Skrip</label>
+            <label class="fl">Target Selesai Produksi</label>
             <IosSelect 
               v-model="fTim.deadlineH" 
               :options="[
@@ -129,18 +155,18 @@
                 { value: 72, label: '3 Hari' },
                 { value: 168, label: '1 Minggu' }
               ]" 
-              label="Pilih Deadline Skrip" 
+              label="Pilih Target Deadline" 
             />
           </div>
 
           <div class="ff">
-            <label class="fl">Link Skrip (opsional)</label>
+            <label class="fl">Link Konsep / Skrip (opsional)</label>
             <input v-model="fTim.skrip" type="url" class="fi" placeholder="https://docs.google.com/...">
           </div>
         </div>
 
         <button class="btn btn-primary mt-2" :disabled="submitting" @click="submit">
-          {{ submitting ? 'Menyimpan...' : 'Simpan Tugas Tim' }}
+          {{ submitting ? 'Menyimpan...' : 'Simpan Konten' }}
         </button>
       </div>
 
@@ -269,8 +295,8 @@ const progjaAdminOptions = computed(() => {
   })
 })
 
-const canCreateTim   = computed(() => ['ketua', 'planner'].includes(auth.currentUser?.role ?? ''))
-const canCreateAdmin = computed(() => ['ketua', 'admin_partnership'].includes(auth.currentUser?.role ?? ''))
+const canCreateTim   = computed(() => auth.currentUser?.access !== 'read-only')
+const canCreateAdmin = computed(() => ['ketua', 'admin_partnership', 'tester'].includes(auth.currentUser?.role ?? '') || auth.currentUser?.id === 'ziyan')
 const canCreateAny   = computed(() => canCreateTim.value || canCreateAdmin.value)
 
 const taskType = ref<TaskType>(
@@ -280,10 +306,18 @@ const taskType = ref<TaskType>(
 )
 
 const KAT_TIM = [
-  'Podcast/Reels/Carousel', 'Film Dokumenter', 'Video Profil',
-  'Edukasi Fiqih', 'Edukasi Tauhid', 'Edukasi Kitab Kuning',
-  'Desain Flyer/Poster', 'Desain Story', 'Aset Digital PIM',
-  'Dawuh Guru', 'Reels/Short',
+  'Dawuh & Keagamaan',
+  'Informasi Kemadrasahan',
+  'Tren Sosmed',
+  'Podcast/Reels/Carousel',
+  'Film Dokumenter',
+  'Video Profil',
+  'Edukasi Fiqih',
+  'Edukasi Tauhid',
+  'Edukasi Kitab Kuning',
+  'Desain Flyer/Poster',
+  'Desain Story',
+  'Aset Digital PIM',
 ]
 const KAT_ADMIN = [
   'Pengelolaan Anggaran', 'Laporan Keuangan', 'Surat Menyurat Penting',
@@ -294,19 +328,27 @@ const PLATFORMS = ['Instagram', 'YouTube', 'TikTok', 'Facebook', 'Multi-Platform
 const DURASI    = ['1 Menit', '3 Menit', '5 Menit', '10 Menit', '30 Menit', '4 Slide', '8 Slide', '12 Slide']
 
 const crewOptions = computed(() => {
-  return auth.USERS.map(u => ({ value: u.name, label: u.name }))
+  return auth.USERS
+    .filter(u => u.access !== 'read-only')
+    .map(u => ({
+      value: u.name,
+      label: u.rubrik ? `${u.name} · ${u.rubrik}` : `${u.name} (${u.roleLabel})`
+    }))
 })
+
+const defaultAssignee = auth.currentUser?.access !== 'read-only' ? (auth.currentUser?.name ?? '') : ''
+const defaultRubrik   = auth.currentUser?.rubrik || KAT_TIM[0]
 
 const fTim = reactive({
   grade: 'A' as TaskGrade,
-  kat: KAT_TIM[0],
+  kat: defaultRubrik,
   name: '',
   platform: PLATFORMS[0],
   durasi: DURASI[0],
   deadlineH: 72,
   skrip: '',
   progja_id: '',
-  assignee: '',
+  assignee: defaultAssignee,
   publish_date: '',
 })
 
@@ -323,6 +365,13 @@ const err         = reactive({ name: '', progja: '' })
 const submitting  = ref(false)
 const showSuccess = ref(false)
 const lastType    = ref<TaskType>('tim')
+
+const onAssigneeChange = (val: string) => {
+  const matched = auth.USERS.find(u => u.name === val)
+  if (matched?.rubrik && !fTim.progja_id) {
+    fTim.kat = matched.rubrik
+  }
+}
 
 const onProgjaChange = () => {
   if (!fTim.progja_id) return
@@ -407,7 +456,8 @@ const resetForm = () => {
   showSuccess.value = false
   fTim.name      = ''
   fTim.progja_id = ''
-  fTim.assignee  = ''
+  fTim.assignee  = defaultAssignee
+  fTim.kat       = defaultRubrik
   fTim.publish_date = ''
   fAdmin.name      = ''
   fAdmin.link      = ''

@@ -276,9 +276,9 @@ const pct = computed(() => {
 const circleOffset = computed(() => CIRC - (pct.value / 100) * CIRC)
 
 const STEPS = [
-  { key: 'planning',   label: 'Planning'   },
-  { key: 'produksi',   label: 'Produksi'   },
-  { key: 'qc',         label: 'QC'         },
+  { key: 'planning',   label: 'Rencana' },
+  { key: 'produksi',   label: 'Produksi & Edit' },
+  { key: 'qc',         label: 'Review & QC'  },
 ] as const
 
 const stepItems = (key: string) =>
