@@ -1,170 +1,197 @@
 <template>
-  <div v-if="task" class="pb-8">
+  <div v-if="task" class="px-4 md:px-8 py-4 md:py-6 max-w-5xl mx-auto">
 
-    <div class="flex items-center gap-2.5 px-4 pt-4 mb-3.5">
+    <!-- Back Header -->
+    <div class="flex items-center gap-3 mb-5">
       <button
-        class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text-primary)] outline-none"
+        class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-[var(--bg-card)] border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-primary)] outline-none transition-colors shadow-sm"
         @click="$router.back()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
       </button>
       <div class="min-w-0 flex-1">
-        <p class="text-base font-bold text-[var(--text-primary)] truncate">{{ task.name }}</p>
-        <p class="text-xs text-[var(--text-muted)]">{{ task.type === 'tim' ? 'Tugas Tim' : 'Tugas Administrasi' }}</p>
+        <p class="text-base md:text-lg font-bold text-[var(--text-primary)] truncate tracking-tight">{{ task.name }}</p>
+        <p class="text-xs text-[var(--text-muted)]">{{ task.type === 'tim' ? 'Tugas Tim / Konten' : 'Tugas Administrasi' }}</p>
       </div>
     </div>
 
-    <div class="mx-4 mb-3 rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] p-4">
-      <div class="flex flex-wrap gap-1.5 mb-2.5">
-        <UiGradeBadge :grade="task.grade" />
-        <UiStatusBadge :status="task.status" />
-        <span v-if="task.assignee" class="text-xs font-semibold px-2 py-0.5 rounded-md bg-purple-400/10 text-purple-500">🧑‍💻 {{ task.assignee }}</span>
-        <span v-if="task.durasi" class="text-xs font-semibold px-2 py-0.5 rounded-md bg-teal-400/10 text-teal-500">{{ task.durasi }}</span>
-        <span v-if="task.platform" class="text-xs font-semibold px-2 py-0.5 rounded-md bg-blue-400/10 text-blue-500">{{ task.platform }}</span>
-      </div>
-      <p class="text-lg font-bold text-[var(--text-primary)] mb-1">{{ task.name }}</p>
-      <p class="text-xs text-[var(--text-muted)] mb-3">{{ task.kat }}</p>
-      
-      <div class="flex items-center justify-between mb-2" v-if="task.publish_date">
-        <span class="text-xs text-[var(--text-muted)]">Target Tayang</span>
-        <span class="text-xs font-semibold text-blue-400">{{ new Date(task.publish_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) }}</span>
-      </div>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
 
-      <div v-if="task.status !== 'selesai'" class="flex items-center justify-between">
-        <span class="text-xs text-[var(--text-muted)]">Deadline</span>
-        <UiCountdownBadge :deadline="task.deadline" />
-      </div>
-    </div>
-
-    <div class="mx-4 mb-4 p-2.5 rounded-xl bg-[var(--bg-elevated)] text-xs text-[var(--text-muted)] leading-relaxed break-all">
-      <span class="text-blue-400 font-semibold">📁 Drive: </span>{{ drivePath }}
-    </div>
-
-    <!-- TAHAP 1: PLANNING -->
-    <template v-if="task.status === 'planning'">
-      <div class="step-bar mx-4 mb-2">
-        <div class="step-dot dot-active">1</div>
-        <p class="text-sm font-bold text-blue-400">Planning</p>
-      </div>
-      <div class="card">
-        <p class="slabel">Form Planning</p>
-        <p v-if="!auth.hasTabAccess('planner')" class="hint">Akses khusus peran Planner.</p>
-        <template v-else>
-          <div v-if="task.qc_comment" class="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-             <p class="text-xs font-bold text-red-400 mb-1">Catatan Revisi:</p>
-             <p class="text-xs text-[var(--text-primary)]">{{ task.qc_comment }}</p>
+      <!-- Left Column (5 cols on desktop): Info Misi + Drive Path + Steps Done -->
+      <div class="lg:col-span-5 space-y-4">
+        <div class="rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] p-5 shadow-sm">
+          <div class="flex flex-wrap gap-1.5 mb-3">
+            <UiGradeBadge :grade="task.grade" />
+            <UiStatusBadge :status="task.status" />
+            <span v-if="task.assignee" class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text-primary)]">
+              <svg class="w-3 h-3 text-[var(--accent)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              {{ task.assignee }}
+            </span>
+            <span v-if="task.durasi" class="text-xs font-semibold px-2 py-0.5 rounded-md bg-teal-500/12 text-[var(--green)]">{{ task.durasi }}</span>
+            <span v-if="task.platform" class="text-xs font-semibold px-2 py-0.5 rounded-md bg-[var(--accent-soft)] text-[var(--accent)]">{{ task.platform }}</span>
           </div>
+          <p class="text-lg font-bold text-[var(--text-primary)] mb-1 leading-snug">{{ task.name }}</p>
+          <p class="text-xs text-[var(--text-muted)] mb-4">{{ task.kat }}</p>
+          
+          <div class="space-y-2.5 pt-3 border-t border-[var(--border)]">
+            <div v-if="task.publish_date" class="flex items-center justify-between">
+              <span class="text-xs text-[var(--text-muted)]">Target Tayang</span>
+              <span class="text-xs font-mono font-semibold text-[var(--accent)]">{{ new Date(task.publish_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) }}</span>
+            </div>
 
-          <div class="ff">
-            <label class="fl">Konsep / Brief *</label>
-            <textarea v-model="fP.konsep" class="fi" rows="4" placeholder="Tuliskan konsep, angle cerita..."/>
+            <div v-if="task.status !== 'selesai'" class="flex items-center justify-between">
+              <span class="text-xs text-[var(--text-muted)]">Deadline Tahap Ini</span>
+              <UiCountdownBadge :deadline="task.deadline" />
+            </div>
           </div>
-          <div class="ff">
-            <label class="fl">Link Skrip (Google Docs)</label>
-            <input v-model="fP.skrip" type="url" class="fi" placeholder="https://docs.google.com/..."/>
-          </div>
-          <div class="ff">
-            <label class="fl">Target Deadline Produksi</label>
-            <select v-model="fP.deadlineH" class="fi">
-              <option :value="24">1 Hari</option><option :value="48">2 Hari</option><option :value="72">3 Hari</option><option :value="168">1 Minggu</option>
-            </select>
-          </div>
-          <p v-if="formErr" class="text-xs text-red-400 mb-3">{{ formErr }}</p>
-          <button class="btn-primary" :disabled="saving" @click="submitPlanning">
-            {{ saving ? 'Menyimpan...' : 'PLANNING SELESAI → PRODUKSI' }}
-          </button>
-        </template>
-      </div>
-    </template>
-
-    <!-- TAHAP 2: PRODUKSI -->
-    <template v-else-if="task.status === 'produksi'">
-      <TaskStepsDone :steps="STEPS" :done="1" />
-      <div class="step-bar mx-4 mb-2">
-        <div class="step-dot dot-active">2</div>
-        <p class="text-sm font-bold text-blue-400">Produksi & Editing</p>
-      </div>
-      <div class="card">
-        <p class="slabel">Proses Pembuatan Konten</p>
-        
-        <div class="prev-box mb-4">
-          <p class="text-xs font-semibold text-[var(--text-secondary)] mb-1">Konsep / Brief:</p>
-          <p class="text-xs text-[var(--text-secondary)] leading-relaxed">{{ task.konsep || '(belum ada konsep)' }}</p>
-          <a v-if="task.skrip" :href="task.skrip" target="_blank" class="text-xs text-blue-400 mt-2 inline-block">Buka Skrip di Drive →</a>
         </div>
 
-        <p v-if="!auth.hasTabAccess('production')" class="hint">Akses khusus tim Produksi.</p>
-        <template v-else>
-          <div v-if="task.qc_comment" class="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-             <p class="text-xs font-bold text-red-400 mb-1">Catatan Revisi QC:</p>
-             <p class="text-xs text-[var(--text-primary)]">{{ task.qc_comment }}</p>
+        <div class="p-3.5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] text-xs text-[var(--text-muted)] leading-relaxed break-all shadow-sm flex items-start gap-2.5">
+          <svg class="w-4 h-4 text-[var(--accent)] flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <div>
+            <span class="text-[var(--accent)] font-semibold block mb-0.5">Lokasi Folder Drive</span>
+            <span class="font-mono text-xs">{{ drivePath }}</span>
           </div>
+        </div>
 
-          <TaskFileChip v-if="task.file" :name="task.file" :drive-id="task.file_drive_id" />
-          
-          <div class="ff mt-3">
-            <label class="fl">Catatan / Link Final (opsional)</label>
-            <textarea v-model="fProd.note" class="fi" rows="2" placeholder="Tulis keterangan atau link tambahan..."/>
+        <TaskStepsDone v-if="task.status === 'produksi'" :steps="STEPS" :done="1" />
+        <TaskStepsDone v-else-if="task.status === 'qc'" :steps="STEPS" :done="2" />
+      </div>
+
+      <!-- Right Column (7 cols on desktop): Active Workflow Stage Form -->
+      <div class="lg:col-span-7">
+
+        <!-- TAHAP 1: PLANNING -->
+        <template v-if="task.status === 'planning'">
+          <div class="step-bar mb-3">
+            <div class="step-dot dot-active">1</div>
+            <p class="text-sm font-bold text-[var(--accent)]">Tahap 1 · Planning & Naskah</p>
           </div>
+          <div class="card">
+            <p class="slabel">Form Planning</p>
+            <p v-if="!auth.hasTabAccess('planner')" class="hint">Akses khusus peran Planner.</p>
+            <template v-else>
+              <div v-if="task.qc_comment" class="mb-4 p-3.5 bg-red-500/10 border border-red-500/20 rounded-xl">
+                <p class="text-xs font-bold text-[var(--red)] mb-1">Catatan Revisi:</p>
+                <p class="text-xs text-[var(--text-primary)]">{{ task.qc_comment }}</p>
+              </div>
 
-          <TaskUploadZone :for-id="`fe-${task.id}`" label="Upload Hasil Akhir" sub="Video / Gambar yang siap review" />
-          <input :id="`fe-${task.id}`" type="file" class="hidden" accept="video/*,image/*,.pdf,.zip" @change="handleUpload($event)"/>
-          <TaskUploadProgress v-if="uploading" :pct="uploadPct" :path="drivePath" />
-          
-          <div v-if="!uploading" class="mt-4">
-            <button class="btn-primary w-full" :disabled="saving || (!task.file && !fProd.note)" @click="submitProduksi">
-              KONTEN SELESAI → KIRIM KE QC
-            </button>
+              <div class="ff">
+                <label class="fl">Konsep / Brief *</label>
+                <textarea v-model="fP.konsep" class="fi" rows="4" placeholder="Tuliskan konsep, angle cerita, atau poin pembahasan..."/>
+              </div>
+              <div class="ff">
+                <label class="fl">Link Skrip (Google Docs)</label>
+                <input v-model="fP.skrip" type="url" class="fi" placeholder="https://docs.google.com/..."/>
+              </div>
+              <div class="ff">
+                <label class="fl">Target Deadline Produksi</label>
+                <select v-model="fP.deadlineH" class="fi">
+                  <option :value="24">1 Hari</option><option :value="48">2 Hari</option><option :value="72">3 Hari</option><option :value="168">1 Minggu</option>
+                </select>
+              </div>
+              <p v-if="formErr" class="text-xs text-[var(--red)] mb-3">{{ formErr }}</p>
+              <button class="btn-primary" :disabled="saving" @click="submitPlanning">
+                {{ saving ? 'Menyimpan...' : 'Selesaikan Planning & Lanjut ke Produksi' }}
+              </button>
+            </template>
           </div>
         </template>
-      </div>
-    </template>
 
-    <!-- TAHAP 3: QC (Quality Control) -->
-    <template v-else-if="task.status === 'qc'">
-      <TaskStepsDone :steps="STEPS" :done="2" />
-      <div class="step-bar mx-4 mb-2">
-        <div class="step-dot dot-active">3</div>
-        <p class="text-sm font-bold text-blue-400">Quality Control</p>
-      </div>
-      <div class="card">
-        <p class="slabel">Review Konten Final</p>
-        
-        <div class="prev-box mb-3">
-          <p class="text-xs text-[var(--text-muted)] mb-1">File yang di-submit:</p>
-          <TaskFileChip v-if="task.file" :name="task.file" :drive-id="task.file_drive_id" :inline="true" />
-          <p v-if="task.produksi_note" class="text-xs text-blue-400 mt-2">{{ task.produksi_note }}</p>
-        </div>
-
-        <p v-if="!auth.hasTabAccess('qc')" class="hint">Akses khusus tim Quality Control.</p>
-        <div v-else>
-          <div class="ff">
-            <label class="fl">Komentar QC</label>
-            <textarea v-model="fQc.comment" class="fi" rows="3" placeholder="Catatan jika ada revisi..."/>
+        <!-- TAHAP 2: PRODUKSI -->
+        <template v-else-if="task.status === 'produksi'">
+          <div class="step-bar mb-3">
+            <div class="step-dot dot-active">2</div>
+            <p class="text-sm font-bold text-[var(--accent)]">Tahap 2 · Produksi & Editing</p>
           </div>
-          <div class="flex gap-2.5">
-            <button class="btn-danger flex-1" :disabled="saving" @click="submitQc('revisi')">REVISI</button>
-            <button class="btn-success flex-1" :disabled="saving" @click="submitQc('setuju')">SETUJU → SELESAI</button>
-          </div>
-        </div>
-      </div>
-    </template>
+          <div class="card">
+            <p class="slabel">Proses Pembuatan Konten</p>
+            
+            <div class="prev-box mb-4">
+              <p class="text-xs font-semibold text-[var(--text-secondary)] mb-1">Konsep / Brief:</p>
+              <p class="text-xs text-[var(--text-secondary)] leading-relaxed">{{ task.konsep || '(belum ada konsep)' }}</p>
+              <a v-if="task.skrip" :href="task.skrip" target="_blank" class="text-xs font-semibold text-[var(--accent)] hover:underline mt-2 inline-block">Buka Skrip di Google Docs</a>
+            </div>
 
-    <!-- TAHAP 4: SELESAI -->
-    <template v-else-if="task.status === 'selesai'">
-      <div class="card text-center py-8 mx-4">
-        <svg class="mx-auto mb-3 w-14 h-14 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4L12 14.01l-3-3"/></svg>
-        <p class="text-lg font-bold text-green-400 mb-1">Tugas Selesai!</p>
-        <p class="text-xs text-[var(--text-muted)]">File / Bukti: {{ task.file ?? '—' }}</p>
-        <p v-if="task.publish_date" class="text-xs text-blue-400 mt-2 font-bold">Akan tayang: {{ new Date(task.publish_date).toLocaleDateString('id-ID') }}</p>
+            <p v-if="!auth.hasTabAccess('production')" class="hint">Akses khusus tim Produksi.</p>
+            <template v-else>
+              <div v-if="task.qc_comment" class="mb-4 p-3.5 bg-red-500/10 border border-red-500/20 rounded-xl">
+                <p class="text-xs font-bold text-[var(--red)] mb-1">Catatan Revisi QC:</p>
+                <p class="text-xs text-[var(--text-primary)]">{{ task.qc_comment }}</p>
+              </div>
+
+              <TaskFileChip v-if="task.file" :name="task.file" :drive-id="task.file_drive_id" />
+              
+              <div class="ff mt-3">
+                <label class="fl">Catatan / Link Final (opsional)</label>
+                <textarea v-model="fProd.note" class="fi" rows="2" placeholder="Tulis keterangan atau link tambahan..."/>
+              </div>
+
+              <TaskUploadZone :for-id="`fe-${task.id}`" label="Upload Hasil Akhir" sub="Video / Gambar yang siap direview QC" />
+              <input :id="`fe-${task.id}`" type="file" class="hidden" accept="video/*,image/*,.pdf,.zip" @change="handleUpload($event)"/>
+              <TaskUploadProgress v-if="uploading" :pct="uploadPct" :path="drivePath" />
+              
+              <div v-if="!uploading" class="mt-4">
+                <button class="btn-primary w-full" :disabled="saving || (!task.file && !fProd.note)" @click="submitProduksi">
+                  Selesaikan Produksi & Kirim ke QC
+                </button>
+              </div>
+            </template>
+          </div>
+        </template>
+
+        <!-- TAHAP 3: QC (Quality Control) -->
+        <template v-else-if="task.status === 'qc'">
+          <div class="step-bar mb-3">
+            <div class="step-dot dot-active">3</div>
+            <p class="text-sm font-bold text-[var(--accent)]">Tahap 3 · Quality Control</p>
+          </div>
+          <div class="card">
+            <p class="slabel">Review Konten Final</p>
+            
+            <div class="prev-box mb-4">
+              <p class="text-xs text-[var(--text-muted)] mb-1.5">File yang disubmit:</p>
+              <TaskFileChip v-if="task.file" :name="task.file" :drive-id="task.file_drive_id" :inline="true" />
+              <p v-if="task.produksi_note" class="text-xs text-[var(--accent)] mt-2">{{ task.produksi_note }}</p>
+            </div>
+
+            <p v-if="!auth.hasTabAccess('qc')" class="hint">Akses khusus tim Quality Control.</p>
+            <div v-else>
+              <div class="ff">
+                <label class="fl">Komentar QC</label>
+                <textarea v-model="fQc.comment" class="fi" rows="3" placeholder="Catatan jika ada revisi atau masukan..."/>
+              </div>
+              <div class="flex gap-3">
+                <button class="btn-danger flex-1" :disabled="saving" @click="submitQc('revisi')">Minta Revisi</button>
+                <button class="btn-success flex-1" :disabled="saving" @click="submitQc('setuju')">Setujui & Selesaikan</button>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- TAHAP 4: SELESAI -->
+        <template v-else-if="task.status === 'selesai'">
+          <div class="card text-center py-10">
+            <div class="w-16 h-16 rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)] flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4L12 14.01l-3-3"/></svg>
+            </div>
+            <p class="text-lg font-bold text-[var(--text-primary)] mb-1">Tugas Telah Selesai</p>
+            <p class="text-xs text-[var(--text-muted)]">File / Bukti: {{ task.file ?? '—' }}</p>
+            <p v-if="task.publish_date" class="text-xs text-[var(--accent)] mt-2.5 font-semibold">Jadwal tayang: {{ new Date(task.publish_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) }}</p>
+          </div>
+        </template>
+
       </div>
-    </template>
+
+    </div>
 
   </div>
 
-  <div v-else class="flex flex-col items-center justify-center h-64 text-[var(--text-muted)] text-sm">
-    <p class="text-4xl mb-3">😕</p>
-    <p>Tugas tidak ditemukan</p>
-    <NuxtLink to="/" class="mt-4 px-5 py-2.5 rounded-xl border border-[var(--border-md)] text-[var(--text-secondary)]">Kembali ke Beranda</NuxtLink>
+  <div v-else class="flex flex-col items-center justify-center h-72 text-[var(--text-muted)] text-sm px-4">
+    <div class="w-12 h-12 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center mb-3">
+      <svg class="w-6 h-6 text-[var(--text-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </div>
+    <p class="font-medium text-[var(--text-secondary)]">Tugas tidak ditemukan</p>
+    <NuxtLink to="/" class="mt-4 px-5 py-2.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-md)] hover:border-[var(--accent)] text-xs font-semibold text-[var(--text-primary)] transition-colors">Kembali ke Beranda</NuxtLink>
   </div>
 </template>
 
@@ -232,10 +259,10 @@ const submitPlanning = async () => {
     konsep:   fP.konsep.trim(),
     skrip:    fP.skrip,
     deadline: new Date(Date.now() + fP.deadlineH * 3_600_000).toISOString(),
-    qc_comment: null // Hapus history revisi jika ada
+    qc_comment: null
   })
   saving.value = false
-  toast.add({ title: 'Planning selesai → Produksi ✓', color: 'green' })
+  toast.add({ title: 'Planning selesai, dilanjutkan ke Produksi', color: 'green' })
 }
 
 const submitProduksi = async () => {
@@ -243,7 +270,7 @@ const submitProduksi = async () => {
   saving.value = true
   await tasks.updateStatus(task.value.id, 'qc', { produksi_note: fProd.note })
   saving.value = false
-  toast.add({ title: 'Terkirim ke QC ✓', color: 'green' })
+  toast.add({ title: 'Konten berhasil dikirim ke QC', color: 'green' })
 }
 
 const submitQc = async (d: 'setuju' | 'revisi') => {
@@ -251,7 +278,7 @@ const submitQc = async (d: 'setuju' | 'revisi') => {
   saving.value = true
   if (d === 'setuju') {
     await tasks.updateStatus(task.value.id, 'selesai', { qc_comment: fQc.comment })
-    toast.add({ title: `Disetujui → Selesai ✓`, color: 'green' })
+    toast.add({ title: `Tugas disetujui dan selesai`, color: 'green' })
   } else {
     await tasks.updateStatus(task.value.id, 'produksi', { qc_comment: fQc.comment })
     toast.add({ title: 'Revisi dikirim ke Produksi', color: 'orange' })
@@ -285,7 +312,7 @@ const handleUpload = async (e: Event) => {
       file:          result.fileName,
       file_drive_id: result.fileId || undefined,
     })
-    toast.add({ title: `✅ "${file.name}" berhasil diupload`, color: 'green' })
+    toast.add({ title: `"${file.name}" berhasil diupload ✓`, color: 'green' })
   } catch (err: any) {
     toast.add({ title: 'Upload gagal: ' + err.message, color: 'red' })
   } finally {
@@ -297,24 +324,29 @@ const handleUpload = async (e: Event) => {
 </script>
 
 <style scoped>
-.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; }
-.slabel { font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; display: block; }
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: var(--card-shadow);
+}
+.slabel { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; display: block; }
 .ff { margin-bottom: 14px; }
 .fl { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; display: block; }
-.fi { width: 100%; background: var(--bg-elevated); border: 1.5px solid var(--border-md); border-radius: 10px; padding: 12px 14px; color: var(--text-primary); font-size: 0.875rem; font-family: inherit; outline: none; transition: border-color .2s; resize: vertical; }
-.fi:focus { border-color: var(--blue); }
-.btn-primary, .btn-success, .btn-danger { display: flex; align-items: center; justify-content: center; width: 100%; padding: 13px; border-radius: 12px; border: none; font-size: 0.875rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: opacity .15s; }
-.btn-outline { display: flex; align-items: center; justify-content: center; width: 100%; padding: 12px; border-radius: 12px; border: 1.5px solid var(--border-md); font-size: 0.875rem; font-weight: 700; color: var(--text-secondary); background: transparent; cursor: pointer; font-family: inherit; text-decoration: none; transition: background .15s, opacity .15s; }
-.btn-outline:active { opacity: 0.7; background: var(--bg-elevated); }
-.btn-primary { background: var(--blue); color: #fff; }
+.fi { width: 100%; background: var(--bg-elevated); border: 1px solid var(--border-md); border-radius: 10px; padding: 11px 14px; color: var(--text-primary); font-size: 0.875rem; font-family: inherit; outline: none; transition: border-color .2s; resize: vertical; }
+.fi:focus { border-color: var(--accent); }
+.btn-primary, .btn-success, .btn-danger { display: flex; align-items: center; justify-content: center; width: 100%; padding: 13px 16px; border-radius: 12px; border: none; font-size: 0.85rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: background .15s, opacity .15s, transform .12s; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
 .btn-success { background: var(--green); color: #fff; }
 .btn-danger { background: var(--red); color: #fff; }
 .btn-primary:disabled, .btn-success:disabled, .btn-danger:disabled { opacity: .5; cursor: not-allowed; }
-.step-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-.step-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
-.dot-active { background: var(--blue); color: #fff; box-shadow: 0 0 0 3px rgba(59,130,246,.2); }
+.step-bar { display: flex; align-items: center; gap: 10px; }
+.step-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; font-family: var(--font-mono); flex-shrink: 0; }
+.dot-active { background: var(--accent); color: #fff; box-shadow: 0 0 0 4px var(--accent-soft); }
 .dot-done { background: var(--green); color: #fff; }
 .dot-pending { background: var(--bg-elevated); color: var(--text-muted); border: 1.5px solid var(--border-md); }
-.prev-box { background: var(--bg-elevated); border-radius: 10px; padding: 12px; }
-.hint { text-align: center; padding: 16px; font-size: 0.875rem; color: var(--text-muted); font-style: italic; }
+.prev-box { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+.hint { text-align: center; padding: 16px; font-size: 0.85rem; color: var(--text-muted); font-style: italic; }
 </style>

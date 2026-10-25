@@ -5,11 +5,11 @@
 
     <!-- Jumlah sisa — angka besar -->
     <p class="text-2xl text-[var(--text-primary)] mt-2 mb-1 leading-tight">
-  <span class="font-bold">{{ sisa }}</span>
-  <span class="font-normal ml-1.5">Task</span>
-</p>
+      <span class="font-bold">{{ sisa }}</span>
+      <span class="font-normal ml-1.5 text-base text-[var(--text-secondary)]">Tugas</span>
+    </p>
     <!-- Rincian nama program -->
-    <p class="text-xs text-[var(--text-muted)] leading-relaxed line-clamp-4">
+    <p class="text-xs text-[var(--text-secondary)] leading-relaxed line-clamp-4 font-normal">
       {{ rincianText }}
     </p>
   </div>

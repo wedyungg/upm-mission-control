@@ -1,34 +1,51 @@
 <template>
-  <div class="pb-2">
+  <div class="px-4 md:px-8 py-4 md:py-6 max-w-7xl mx-auto">
     
-    <div class="sticky top-0 z-10 bg-[var(--bg-base)] px-4 pt-4 pb-2 mb-2 border-b border-[var(--border)]">
-      <h1 class="text-xl font-bold text-[var(--text-primary)] mb-3">Semua Tugas</h1>
-      
-      <div class="flex gap-2 mb-3 bg-[var(--bg-elevated)] p-1 rounded-xl border border-[var(--border-md)]">
-        <button v-for="t in TYPE_TABS" :key="t.v"
-          class="flex-1 py-1.5 rounded-lg text-xs font-bold transition-all duration-200"
-          :class="typeF === t.v 
-            ? 'bg-[var(--blue)] text-white shadow-sm' 
-            : 'text-[var(--text-secondary)] hover:bg-[var(--bg-surface)]'"
-          @click="typeF = t.v">
-          {{ t.l }}
-        </button>
-      </div>
+    <!-- Header + Filter Controls -->
+    <div class="sticky top-0 z-10 bg-[var(--bg-base)]/90 backdrop-blur-md pt-1 pb-4 mb-5 border-b border-[var(--border)]">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3.5">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-xl md:text-2xl font-bold text-[var(--text-primary)] tracking-tight">Semua Tugas</h1>
+            <p class="text-xs text-[var(--text-secondary)] mt-0.5">Menampilkan {{ filtered.length }} tugas sesuai filter aktif</p>
+          </div>
+        </div>
+        
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+          <!-- Type Segmented Control -->
+          <div class="flex gap-1 bg-[var(--bg-elevated)] p-1 rounded-xl border border-[var(--border-md)] sm:w-64 flex-shrink-0">
+            <button v-for="t in TYPE_TABS" :key="t.v"
+              class="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all duration-150"
+              :class="typeF === t.v 
+                ? 'bg-[var(--accent)] text-white shadow-sm' 
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'"
+              @click="typeF = t.v">
+              {{ t.l }}
+            </button>
+          </div>
 
-      <div class="flex gap-2 overflow-x-auto scrollbar-none pb-1">
-        <button v-for="s in STATUS_TABS" :key="s.v"
-          class="flex-shrink-0 px-4 py-1.5 rounded-full text-[11px] font-semibold transition-all border"
-          :class="statusF === s.v 
-            ? 'bg-blue-500/10 border-[var(--blue)] text-[var(--blue)]' 
-            : 'bg-[var(--bg-elevated)] border-[var(--border-md)] text-[var(--text-secondary)]'"
-          @click="statusF = s.v">
-          {{ s.l }}
-        </button>
+          <!-- Status Filter Pills -->
+          <div class="flex gap-1.5 overflow-x-auto scrollbar-none pb-0.5">
+            <button v-for="s in STATUS_TABS" :key="s.v"
+              class="flex-shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all border"
+              :class="statusF === s.v 
+                ? 'bg-[var(--accent-soft)] border-[var(--accent)] text-[var(--accent)]' 
+                : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-md)]'"
+              @click="statusF = s.v">
+              {{ s.l }}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="px-4 mt-3">
-      <TransitionGroup name="list" tag="div" class="relative">
+    <!-- Multi-Column Task Grid on Desktop -->
+    <div>
+      <TransitionGroup
+        name="list"
+        tag="div"
+        class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5 relative"
+      >
         <TaskCard 
           v-for="t in filtered" 
           :key="t.id" 
@@ -37,11 +54,12 @@
         />
       </TransitionGroup>
 
-      <div v-if="!filtered.length" class="flex flex-col items-center justify-center py-16 text-[var(--text-muted)] opacity-80">
-        <svg class="w-12 h-12 mb-3 text-[var(--border-md)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div v-if="!filtered.length" class="flex flex-col items-center justify-center py-16 px-4 rounded-2xl bg-[var(--bg-card)] border border-dashed border-[var(--border-md)] text-[var(--text-muted)]">
+        <svg class="w-11 h-11 mb-3 text-[var(--text-muted)] opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
         </svg>
-        <p class="text-sm font-medium">Tidak ada tugas di kategori ini</p>
+        <p class="text-sm font-medium text-[var(--text-secondary)]">Tidak ada tugas di kategori ini</p>
+        <p class="text-xs text-[var(--text-muted)] mt-1">Coba pilih filter status atau tipe tugas lainnya</p>
       </div>
     </div>
     
@@ -57,69 +75,54 @@ const route = useRoute()
 
 onMounted(() => { if (!tasks.tasks.length) tasks.fetchTasks() })
 
-// Opsi Tipe Tugas
 const TYPE_TABS = [
   { v: 'semua', l: 'Semua' },
   { v: 'tim',   l: 'Tim' },
   { v: 'admin', l: 'Admin' }
 ]
 
-// ✅ Solusi: Kategori filter disamakan persis dengan logika Dashboard
 const STATUS_TABS = [
   { v: 'semua',   l: 'Semua' },
   { v: 'belum',   l: 'Belum Mulai' },
   { v: 'proses',  l: 'Dalam Proses' },
-  { v: 'approval',l: 'Approval' },
+  { v: 'approval',l: 'Approval QC' },
   { v: 'selesai', l: 'Selesai' },
 ]
 
 const typeF   = ref('semua')
 const statusF = ref('semua')
 
-// ✅ Menangkap status dari Dashboard saat halaman dimuat
 onMounted(() => {
   if (route.query.status) {
     statusF.value = String(route.query.status)
   }
 })
 
-// ✅ Menjaga filter tetap sinkron jika URL berubah (misal dari tombol back)
 watch(() => route.query.status, (newStatus) => {
   if (newStatus) statusF.value = String(newStatus)
 })
 
-// Logika Filter & Sorting
 const filtered = computed(() => {
   let l = [...tasks.tasks]
   
-  // 1. Filter Tipe
   if (typeF.value !== 'semua') {
     l = l.filter(t => t.type === typeF.value)
   }
 
-  // 2. Filter Status (Grouping cerdas yg sudah diperbaiki)
   if (statusF.value !== 'semua') {
     l = l.filter(t => {
-      // Selesai & Belum Mulai tetap sama
       if (statusF.value === 'selesai') return t.status === 'selesai'
       if (statusF.value === 'belum') return t.status === 'planning'
-      
-      // Approval: Hanya untuk tugas TIM (QC)
       if (statusF.value === 'approval') {
         return t.type === 'tim' && t.status === 'qc'
       }
-      
-      // ✅ Solusi: Dalam Proses 
-      // Tim = produksi
       if (statusF.value === 'proses') {
         return t.status === 'produksi'
       }
-      
       return true
     })
   }
 
-  // 3. UX: Urutkan otomatis
   return l.sort((a, b) => {
     if (a.status === 'selesai' && b.status !== 'selesai') return 1
     if (a.status !== 'selesai' && b.status === 'selesai') return -1
@@ -132,19 +135,14 @@ const filtered = computed(() => {
 .scrollbar-none { scrollbar-width: none; }
 .scrollbar-none::-webkit-scrollbar { display: none; }
 
-/* ✅ UX: Transisi animasi untuk Vue TransitionGroup */
 .list-move,
 .list-enter-active,
 .list-leave-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .list-enter-from,
 .list-leave-to {
   opacity: 0;
-  transform: translateX(-15px);
-}
-.list-leave-active {
-  position: absolute;
-  width: 100%;
+  transform: translateY(8px);
 }
 </style>

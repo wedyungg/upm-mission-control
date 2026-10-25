@@ -1,14 +1,14 @@
 <template>
   <div>
     <div 
-      class="w-full bg-[var(--bg-elevated)] border-[1.5px] border-[var(--border-md)] rounded-[10px] p-[11px_14px] text-left text-[14px] text-[var(--text-primary)] flex justify-between items-center cursor-pointer transition-colors"
-      :class="error ? 'border-red-500' : 'focus-within:border-[var(--blue)]'"
+      class="w-full bg-[var(--bg-elevated)] border border-[var(--border-md)] hover:border-[var(--accent)] rounded-[10px] p-[11px_14px] text-left text-[14px] text-[var(--text-primary)] flex justify-between items-center cursor-pointer transition-colors"
+      :class="error ? 'border-[var(--red)]' : ''"
       @click="isOpen = true"
     >
-      <span :class="modelValue ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]'">
+      <span class="truncate pr-2" :class="modelValue ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]'">
         {{ selectedLabel }}
       </span>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      <svg class="flex-shrink-0 text-[var(--text-muted)]" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
     </div>
 
     <Teleport to="body">
@@ -19,7 +19,7 @@
             <div class="ios-sheet">
               <div class="sheet-header">
                 <span class="sheet-title">{{ label || 'Pilih Opsi' }}</span>
-                <button class="sheet-close" @click="isOpen = false">Tutup</button>
+                <button class="sheet-close" @click="isOpen = false">Selesai</button>
               </div>
               
               <div class="sheet-body">
@@ -30,8 +30,8 @@
                   :class="{ active: modelValue === opt.value }"
                   @click="selectOption(opt.value)"
                 >
-                  {{ opt.label }}
-                  <span v-if="modelValue === opt.value" class="check-icon text-[var(--blue)]">✓</span>
+                  <span>{{ opt.label }}</span>
+                  <svg v-if="modelValue === opt.value" class="w-4 h-4 text-[var(--accent)] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
                 </button>
               </div>
             </div>
@@ -79,44 +79,56 @@ const selectOption = (val) => {
 </script>
 
 <style scoped>
-/* Backdrop menutupi seluruh layar browser secara absolut */
 .ios-backdrop {
   position: fixed; 
   inset: 0; 
   z-index: 99999;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(5px);
   display: flex; 
   flex-direction: column; 
   justify-content: flex-end;
-  align-items: center; /* Menengahkan sheet di layar besar */
+  align-items: center;
+}
+@media (min-width: 768px) {
+  .ios-backdrop {
+    justify-content: center;
+    padding: 24px;
+  }
 }
 
-/* Pembatas ukuran biar kalau dibuka di PC nggak raksasa "selayar" */
 .ios-sheet-wrapper {
   width: 100%;
-  max-width: 480px; /* Lebar maksimal layaknya HP */
+  max-width: 440px;
   display: flex;
   justify-content: center;
 }
 
 .ios-sheet {
   width: 100%;
-  background: var(--bg-surface, #1e293b);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-md);
   border-radius: 24px 24px 0 0;
-  padding: 20px 20px 34px; 
+  padding: 20px 20px 30px; 
   max-height: 70vh;
   display: flex; flex-direction: column;
   box-shadow: 0 -4px 24px rgba(0,0,0,0.4);
+}
+@media (min-width: 768px) {
+  .ios-sheet {
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+  }
 }
 
 .sheet-header {
   display: flex; justify-content: space-between; align-items: center;
   margin-bottom: 12px; padding-bottom: 12px;
-  border-bottom: 1px solid var(--border, rgba(255,255,255,0.08));
+  border-bottom: 1px solid var(--border);
 }
-.sheet-title { font-size: 16px; font-weight: 700; color: var(--text-primary); }
-.sheet-close { font-size: 15px; font-weight: 600; color: var(--blue); background: none; border: none; cursor: pointer; }
+.sheet-title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.sheet-close { font-size: 14px; font-weight: 600; color: var(--accent); background: none; border: none; cursor: pointer; }
 
 .sheet-body {
   overflow-y: auto; display: flex; flex-direction: column; gap: 4px; scrollbar-width: none;
@@ -125,18 +137,17 @@ const selectOption = (val) => {
 
 .sheet-item {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 14px 16px; border-radius: 12px;
+  padding: 12px 14px; border-radius: 12px;
   background: transparent; border: none;
-  font-size: 15px; font-weight: 500; color: var(--text-muted);
-  text-align: left; cursor: pointer; transition: background 0.2s;
+  font-size: 14px; font-weight: 500; color: var(--text-secondary);
+  text-align: left; cursor: pointer; transition: background 0.15s;
 }
-.sheet-item:active { background: var(--bg-elevated); }
+.sheet-item:hover { background: var(--bg-elevated); }
 .sheet-item.active { 
-  color: var(--blue); font-weight: 700; background: rgba(59, 130, 246, 0.1); 
+  color: var(--accent); font-weight: 700; background: var(--accent-soft); 
 }
 
-/* Animasi Slide dari bawah */
-.slide-bottom-enter-active, .slide-bottom-leave-active { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.slide-bottom-enter-active, .slide-bottom-leave-active { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
 .slide-bottom-enter-from, .slide-bottom-leave-to { opacity: 0; }
-.slide-bottom-enter-from .ios-sheet-wrapper, .slide-bottom-leave-to .ios-sheet-wrapper { transform: translateY(100%); }
+.slide-bottom-enter-from .ios-sheet-wrapper, .slide-bottom-leave-to .ios-sheet-wrapper { transform: translateY(24px); }
 </style>

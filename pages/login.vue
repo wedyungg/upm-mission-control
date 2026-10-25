@@ -1,35 +1,63 @@
 <template>
-  <!-- Full-screen shell — same bg as app -->
-  <div class="min-h-dvh bg-[var(--bg-base)] flex flex-col items-center justify-start overflow-y-auto px-6 pt-12 pb-10">
+  <!-- Full-screen shell — responsive Apple HIG login -->
+  <div class="min-h-dvh bg-[var(--bg-base)] flex flex-col items-center justify-center relative overflow-y-auto px-5 py-10">
+
+    <!-- Top-right Theme Toggle -->
+    <div class="fixed top-4 right-4 sm:top-6 sm:right-6 z-20">
+      <button
+        class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-md)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-all shadow-sm"
+        @click="theme.toggle()"
+      >
+        <svg v-if="theme.isDark" class="w-4 h-4 text-[var(--yellow)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5" />
+          <line x1="12" y1="1" x2="12" y2="3" />
+          <line x1="12" y1="21" x2="12" y2="23" />
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+          <line x1="1" y1="12" x2="3" y2="12" />
+          <line x1="21" y1="12" x2="23" y2="12" />
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </svg>
+        <svg v-else class="w-4 h-4 text-[var(--accent)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+        <span>{{ theme.isDark ? 'Mode Terang' : 'Mode Gelap' }}</span>
+      </button>
+    </div>
 
     <!-- Brand -->
     <div class="text-center mb-8">
-      <img
-        v-if="logoOk"
-        src="/appLogo.png"
-        alt="UPM Logo"
-        class="h-10 w-auto mx-auto mb-3 object-contain"
-        @error="logoOk = false"
-      />
-      <div v-else class="flex items-end justify-center gap-1 mb-3">
-        <span class="w-1.5 rounded-sm inline-block" style="height:14px;background:#ef4444" />
-        <span class="w-1.5 rounded-sm inline-block" style="height:18px;background:#f97316" />
-        <span class="w-1.5 rounded-sm inline-block" style="height:24px;background:#3b82f6" />
-        <span class="w-1.5 rounded-sm inline-block" style="height:20px;background:#22c55e" />
+      <div class="w-14 h-14 rounded-2xl bg-[var(--accent-soft)] border border-[var(--border-md)] flex items-center justify-center mx-auto mb-3.5 shadow-sm">
+        <img
+          v-if="logoOk"
+          src="/appLogo.png"
+          alt="UPM Logo"
+          class="h-8 w-auto object-contain"
+          @error="logoOk = false"
+        />
+        <div v-else class="flex items-end justify-center gap-1">
+          <span class="w-1.5 rounded-sm inline-block" style="height:12px;background:#ef4444" />
+          <span class="w-1.5 rounded-sm inline-block" style="height:16px;background:#f59e0b" />
+          <span class="w-1.5 rounded-sm inline-block" style="height:22px;background:#10b981" />
+          <span class="w-1.5 rounded-sm inline-block" style="height:18px;background:#059669" />
+        </div>
       </div>
-      <p class="text-lg font-bold text-[var(--text-primary)] tracking-tight">Dashboard Kinerja UPM</p>
-      <p class="text-xs text-[var(--text-muted)] mt-0.5 font-mono">UPM Mission Control v1.0</p>
+      <h1 class="text-xl sm:text-2xl font-bold text-[var(--text-primary)] tracking-tight">Dashboard Kinerja UPM</h1>
+      <p class="text-xs text-[var(--text-muted)] mt-1">Sistem Manajemen Konten & Jadwal Publikasi</p>
     </div>
 
-    <!-- ── STEP 1: Account grid (Netflix-style) ── -->
-    <Transition name="fade">
-      <div v-if="!selectedId" class="w-full max-w-sm">
-        <p class="text-[10px] font-bold tracking-widest uppercase text-[var(--text-muted)] mb-3">
-          Pilih Akun Anda
-        </p>
+    <!-- ── STEP 1: Account grid ── -->
+    <Transition name="fade" mode="out-in">
+      <div v-if="!selectedId" class="w-full max-w-md md:max-w-2xl">
+        <div class="flex items-center justify-between mb-3 px-1">
+          <p class="text-xs font-semibold tracking-wider uppercase text-[var(--text-muted)]">
+            Pilih Akun
+          </p>
+          <span class="text-xs text-[var(--text-muted)]">{{ USERS.length }} akun</span>
+        </div>
 
-        <!-- 2-column grid of square cards -->
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-3.5">
           <button
             v-for="user in USERS"
             :key="user.id"
@@ -38,37 +66,35 @@
           >
             <!-- Avatar circle -->
             <div
-              class="w-14 h-14 rounded-full flex items-center justify-center text-sm font-bold mb-2 mx-auto ring-2 ring-transparent group-hover:ring-[var(--blue)] transition-all duration-200"
+              class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-sm font-bold mb-2.5 mx-auto ring-2 ring-transparent group-hover:ring-[var(--accent)] transition-all duration-200"
               :style="{ background: user.bg, color: user.color }"
             >
               {{ user.initials }}
             </div>
             <!-- Name -->
-            <p class="text-xs font-semibold text-[var(--text-primary)] leading-tight text-center line-clamp-2">
+            <p class="text-sm font-semibold text-[var(--text-primary)] leading-tight text-center line-clamp-1">
               {{ user.name }}
             </p>
             <!-- Role -->
-            <p class="text-[10px] text-[var(--text-muted)] text-center mt-0.5 leading-tight">
+            <p class="text-xs text-[var(--text-secondary)] text-center mt-1 leading-tight">
               {{ user.roleLabel }}
             </p>
             <!-- Read-only badge -->
             <span
               v-if="user.access === 'read-only'"
-              class="mt-1.5 inline-block text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-500/15 text-red-400"
+              class="mt-2 inline-block text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/12 text-[var(--yellow)] border border-amber-500/20"
             >Read Only</span>
           </button>
         </div>
       </div>
-    </Transition>
 
-    <!-- ── STEP 2: Password form ── -->
-    <Transition name="slide-up">
-      <div v-if="selectedId" class="w-full max-w-sm">
+      <!-- ── STEP 2: Password form ── -->
+      <div v-else class="w-full max-w-sm bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-5 sm:p-6 shadow-sm">
 
         <!-- Selected user recap -->
-        <div class="flex items-center gap-3 mb-6 p-3 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-md)]">
+        <div class="flex items-center gap-3 mb-5 p-3 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border)]">
           <div
-            class="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+            class="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0"
             :style="{ background: selectedUser?.bg, color: selectedUser?.color }"
           >
             {{ selectedUser?.initials }}
@@ -78,7 +104,7 @@
             <p class="text-xs text-[var(--text-muted)]">{{ selectedUser?.roleLabel }}</p>
           </div>
           <button
-            class="text-xs text-[var(--blue)] font-semibold flex-shrink-0"
+            class="text-xs text-[var(--accent)] hover:underline font-semibold flex-shrink-0 px-2 py-1"
             @click="reset"
           >Ganti</button>
         </div>
@@ -95,19 +121,19 @@
           @keydown.enter="submit"
         />
 
-        <p v-if="errorMsg" class="text-xs text-red-400 mb-3 px-0.5">{{ errorMsg }}</p>
+        <p v-if="errorMsg" class="text-xs text-[var(--red)] font-medium mb-3 px-0.5">{{ errorMsg }}</p>
 
         <button
-          class="w-full py-3.5 bg-[var(--blue)] text-white text-sm font-bold rounded-xl tracking-wide transition-opacity"
+          class="w-full py-3 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-semibold rounded-xl tracking-wide transition-all shadow-sm active:scale-[0.99]"
           :class="{ 'opacity-60 cursor-not-allowed': loading }"
           :disabled="loading"
           @click="submit"
         >
-          {{ loading ? 'Memverifikasi...' : 'MASUK' }}
+          {{ loading ? 'Memverifikasi...' : 'Masuk' }}
         </button>
 
         <p class="text-center text-xs text-[var(--text-muted)] mt-4">
-          Atau <span class="text-[var(--blue)] font-semibold cursor-pointer" @click="reset">pilih akun lain</span>
+          Atau <span class="text-[var(--accent)] font-semibold cursor-pointer hover:underline" @click="reset">pilih akun lain</span>
         </p>
       </div>
     </Transition>
@@ -171,45 +197,47 @@ const submit = async () => {
 </script>
 
 <style scoped>
-/* Square Netflix-style account card */
 .account-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 16px 10px 14px;
-  background: var(--bg-surface);
-  border: 1.5px solid var(--border);
-  border-radius: 14px;
+  justify-content: center;
+  padding: 18px 12px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
   cursor: pointer;
-  transition: border-color .2s, transform .15s, background .2s;
+  transition: border-color .18s ease, transform .15s ease, background .18s ease, box-shadow .18s ease;
   -webkit-tap-highlight-color: transparent;
   outline: none;
+  box-shadow: var(--card-shadow);
 }
-.account-card:hover  { border-color: var(--border-md); background: var(--bg-elevated); }
-.account-card:active { transform: scale(0.96); }
+.account-card:hover {
+  border-color: var(--accent);
+  background: var(--bg-surface);
+  transform: translateY(-1px);
+}
+.account-card:active { transform: scale(0.97); }
 
-/* Password input */
 .pw-input {
   width: 100%;
-  padding: 13px 16px;
-  background: var(--bg-surface);
-  border: 1.5px solid var(--border-md);
-  border-radius: 10px;
+  padding: 12px 14px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-md);
+  border-radius: 12px;
   color: var(--text-primary);
   font-size: 15px;
   font-family: inherit;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   outline: none;
-  transition: border-color .2s;
+  transition: border-color .2s, box-shadow .2s;
   display: block;
 }
-.pw-input:focus { border-color: var(--blue); }
+.pw-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
 
-/* Transitions */
-.fade-enter-active, .fade-leave-active { transition: opacity .2s ease; }
-.fade-enter-from, .fade-leave-to       { opacity: 0; }
-
-.slide-up-enter-active, .slide-up-leave-active { transition: all .25s ease; }
-.slide-up-enter-from { opacity: 0; transform: translateY(12px); }
-.slide-up-leave-to   { opacity: 0; transform: translateY(-8px); }
+.fade-enter-active, .fade-leave-active { transition: opacity .18s ease, transform .18s ease; }
+.fade-enter-from, .fade-leave-to       { opacity: 0; transform: translateY(6px); }
 </style>

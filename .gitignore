@@ -33,3 +33,12 @@ Thumbs.db
 
 # Supabase
 supabase/.temp
+
+# Local deploy scripts & archives
+deploy.mjs
+fix-deploy.mjs
+auto-deploy.mjs
+debug.mjs
+start-server.mjs
+output.zip
+*.zip

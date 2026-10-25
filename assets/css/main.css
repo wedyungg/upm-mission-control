@@ -1,76 +1,202 @@
 /* ================================================================
-   UPM Mission Control — Global Styles
-   Semua teks pakai Plus Jakarta Sans. Tidak ada font-mono.
+   UPM Mission Control — Global Styles & Apple HIG Emerald Theme
+   Dark Mode: Carbon Obsidian + Emerald (#10B981)
+   Light Mode: Warm Sage Alabaster (Eye-Friendly Low-Glare) + Deep Emerald (#059669)
    ================================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 16px; height: 100%; overflow: hidden; }
 body {
   height: 100%; overflow: hidden;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', sans-serif;
+  background: var(--bg-base);
+  color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* ── Theme tokens ─────────────────────────────────────────── */
+/* ── Dark Theme (Default): Carbon Obsidian & Emerald ──────── */
 :root {
-  --bg-base:    #0f172a;  --bg-surface: #1e293b;
-  --bg-elevated:#263046;  --bg-card:    #1a2540;
-  --text-primary:   #f1f5f9; --text-secondary: #94a3b8; --text-muted: #64748b;
-  --border:    rgba(255,255,255,0.08);  --border-md: rgba(255,255,255,0.14);
-  --blue:   #3b82f6; --green:  #22c55e; --orange: #f97316;
-  --red:    #ef4444; --yellow: #eab308; --purple: #a855f7; --teal: #14b8a6;
-  --grade-s: #ef4444; --grade-a: #22c55e; --grade-b: #3b82f6; --grade-c: #eab308;
-  --shell-max: 480px; --nav-h: 72px; --header-h: 56px;
-  /* Semua font pakai Jakarta Plus */
-  --font-body: 'Plus Jakarta Sans', sans-serif;
-  --font-mono: 'Plus Jakarta Sans', sans-serif;
-  --radius: 12px; --radius-sm: 8px; --radius-lg: 16px;
+  --bg-base:        #090d0b;
+  --bg-surface:     #101613;
+  --bg-card:        #131b17;
+  --bg-elevated:    #1a2520;
+  --bg-glass:       rgba(16, 22, 19, 0.82);
+
+  --text-primary:   #edf7f2;
+  --text-secondary: #98afa4;
+  --text-muted:     #667d72;
+
+  --border:         rgba(16, 185, 129, 0.11);
+  --border-md:      rgba(16, 185, 129, 0.22);
+
+  /* Brand Accent (Emerald) — mapped to --blue as well for seamless component compatibility */
+  --accent:         #10b981;
+  --accent-hover:   #059669;
+  --accent-soft:    rgba(16, 185, 129, 0.14);
+  --blue:           #10b981;
+  --green:          #10b981;
+  --teal:           #14b8a6;
+  --orange:         #f59e0b;
+  --red:            #ef4444;
+  --yellow:         #eab308;
+  --purple:         #a855f7;
+
+  --grade-s:        #ef4444;
+  --grade-a:        #10b981;
+  --grade-b:        #0ea5e9;
+  --grade-c:        #eab308;
+
+  --shadow-card:    0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.22);
+  --shadow-float:   0 12px 40px rgba(0, 0, 0, 0.55);
+
+  --shell-max:      480px;
+  --sidebar-w:      264px;
+  --nav-h:          74px;
+  --header-h:       60px;
+
+  --font-body:      -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', sans-serif;
+  --font-mono:      'Plus Jakarta Sans', sans-serif;
+  --radius:         14px;
+  --radius-sm:      10px;
+  --radius-lg:      18px;
 }
 
+/* ── Light Theme: Eye-Friendly Warm Alabaster & Deep Emerald ─ */
 [data-theme="light"] {
-  --bg-base:    #f1f5f9; --bg-surface: #ffffff;
-  --bg-elevated:#f8fafc; --bg-card:    #ffffff;
-  --text-primary:   #0f172a; --text-secondary: #475569; --text-muted: #94a3b8;
-  --border:    rgba(0,0,0,0.08); --border-md: rgba(0,0,0,0.14);
+  /* Warm sage-stone background avoids harsh 100% white glare */
+  --bg-base:        #f2f5f3;
+  --bg-surface:     #f8faf9;
+  --bg-card:        #fcfdfc;
+  --bg-elevated:    #e7eeea;
+  --bg-glass:       rgba(248, 250, 249, 0.86);
+
+  /* Deep forest-charcoal ink for effortless reading (WCAG AAA) */
+  --text-primary:   #0d1f17;
+  --text-secondary: #3b5247;
+  --text-muted:     #61786d;
+
+  --border:         rgba(13, 31, 23, 0.08);
+  --border-md:      rgba(13, 31, 23, 0.15);
+
+  --accent:         #059669;
+  --accent-hover:   #047857;
+  --accent-soft:    rgba(5, 150, 105, 0.11);
+  --blue:           #059669;
+  --green:          #059669;
+  --teal:           #0d9488;
+  --orange:         #d97706;
+  --red:            #dc2626;
+  --yellow:         #ca8a04;
+  --purple:         #7c3aed;
+
+  --shadow-card:    0 1px 3px rgba(13, 31, 23, 0.05), 0 4px 14px rgba(13, 31, 23, 0.03);
+  --shadow-float:   0 12px 36px rgba(13, 31, 23, 0.12);
 }
 
-/* ── Nuxt root ────────────────────────────────────────────── */
-#__nuxt { height: 100%; display: flex; justify-content: center; background: var(--bg-base); }
+/* ── Nuxt Root ────────────────────────────────────────────── */
+#__nuxt {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  background: var(--bg-base);
+}
 
-/* ── App shell — strict 480px ─────────────────────────────── */
+/* ── App Shell — Responsive Mobile -> Desktop Reflow ──────── */
 .app-shell {
-  width: 100%; max-width: var(--shell-max);
-  height: 100dvh; display: flex; flex-direction: column;
-  overflow: hidden; position: relative; background: var(--bg-base);
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 32px 80px rgba(0,0,0,0.5);
+  width: 100%;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  background: var(--bg-base);
 }
 
-/* ── Scrollable area ──────────────────────────────────────── */
+@media (min-width: 768px) {
+  .app-shell {
+    flex-direction: row;
+    max-width: 100vw;
+  }
+}
+
+/* ── Main Content Wrapper ─────────────────────────────────── */
+.app-main {
+  flex: 1;
+  min-width: 0;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  background: var(--bg-base);
+}
+
+/* ── Scrollable Viewport ──────────────────────────────────── */
 .view-scroll {
-  flex: 1; overflow-y: auto; overflow-x: hidden;
-  -webkit-overflow-scrolling: touch; scrollbar-width: none;
-  padding-bottom: calc(var(--nav-h) + 12px);
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(var(--nav-h) + 20px);
 }
-.view-scroll.no-nav { padding-bottom: 0; }
-.view-scroll::-webkit-scrollbar { display: none; }
-.app-shell * { max-width: 100%; }
 
-/* ── Transitions ──────────────────────────────────────────── */
-.page-enter-active, .page-leave-active { transition: opacity .18s ease, transform .18s ease; }
-.page-enter-from { opacity: 0; transform: translateY(6px); }
+@media (min-width: 768px) {
+  .view-scroll {
+    padding-bottom: 36px;
+  }
+}
+
+.view-scroll.no-nav {
+  padding-bottom: 0;
+}
+
+.page-container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* ── Shared Surface Card ──────────────────────────────────── */
+.surface-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+/* ── Page Transitions ─────────────────────────────────────── */
+.page-enter-active, .page-leave-active {
+  transition: opacity .18s cubic-bezier(0.22, 1, 0.36, 1), transform .18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.page-enter-from { opacity: 0; transform: translateY(4px); }
 .page-leave-to   { opacity: 0; }
 
-/* ── Forms ────────────────────────────────────────────────── */
-input, select, textarea, button { font-family: 'Plus Jakarta Sans', sans-serif; }
-select option { background: var(--bg-surface); color: var(--text-primary); }
+@media (prefers-reduced-motion: reduce) {
+  .page-enter-active, .page-leave-active { transition: none; }
+}
 
-/* ── Scrollbar ────────────────────────────────────────────── */
-*::-webkit-scrollbar       { width: 4px; height: 4px; }
-*::-webkit-scrollbar-track  { background: transparent; }
-*::-webkit-scrollbar-thumb  { background: var(--border-md); border-radius: 2px; }
+/* ── Forms & Interactive Controls ─────────────────────────── */
+input, select, textarea, button {
+  font-family: inherit;
+}
+select option {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 
-/* ── Override any lingering font-mono in Tailwind ─────────── */
+/* ── Subtle Scrollbar on Desktop ──────────────────────────── */
+*::-webkit-scrollbar       { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: var(--border-md); border-radius: 99px; }
+*::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
 .font-mono { font-family: 'Plus Jakarta Sans', sans-serif !important; }

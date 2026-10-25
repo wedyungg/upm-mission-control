@@ -1,24 +1,31 @@
 <template>
-  <AppHeader v-if="auth.isLoggedIn" />
-  <DriveStatusBar v-if="auth.isLoggedIn" />
+  <AppSidebar v-if="auth.isLoggedIn" />
 
-  <div
-    class="view-scroll"
-    :class="{ 'no-nav': !auth.isLoggedIn }"
-  >
-    <slot />
+  <div class="app-main">
+    <AppHeader v-if="auth.isLoggedIn" />
+    <DriveStatusBar v-if="auth.isLoggedIn" class="md:hidden" />
+
+    <div
+      class="view-scroll"
+      :class="{ 'no-nav': !auth.isLoggedIn }"
+    >
+      <div class="page-container">
+        <slot />
+      </div>
+    </div>
+
+    <AppBottomNav v-if="auth.isLoggedIn && !hideNav" class="md:hidden" />
   </div>
-
-  <AppBottomNav v-if="auth.isLoggedIn && !hideNav" />
 </template>
 
 <script setup lang="ts">
-import AppHeader     from '~/components/layout/AppHeader.vue'
-import AppBottomNav  from '~/components/layout/AppBottomNav.vue'
+import AppSidebar     from '~/components/layout/AppSidebar.vue'
+import AppHeader      from '~/components/layout/AppHeader.vue'
+import AppBottomNav   from '~/components/layout/AppBottomNav.vue'
 import DriveStatusBar from '~/components/layout/DriveStatusBar.vue'
 import { useAuthStore } from '~/stores/auth'
 
-const auth  = useAuthStore()
-const route = useRoute()
+const auth    = useAuthStore()
+const route   = useRoute()
 const hideNav = computed(() => route.name === 'misi-id')
 </script>

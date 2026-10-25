@@ -1,49 +1,45 @@
 <template>
-  <div class="pb-20">
-    <!-- Header -->
-    <div class="sticky top-0 z-10 bg-[var(--bg-base)]/90 backdrop-blur-md px-4 pt-4 pb-3 border-b border-[var(--border)] mb-4">
+  <div class="px-4 md:px-8 py-5 md:py-7 max-w-7xl mx-auto">
+    <!-- Header & Inline Legend on Desktop -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-xl font-bold text-[var(--text-primary)]">Monthly Planner</h1>
-          <p class="text-xs text-[var(--text-muted)] mt-0.5">Jadwal Tayang Konten</p>
+          <h1 class="text-2xl font-bold text-[var(--text-primary)] tracking-tight">Kalender Tayang</h1>
+          <p class="text-xs text-[var(--text-secondary)] mt-1">Jadwal tayang & target publikasi konten bulanan</p>
         </div>
         
-        <button class="bg-[var(--blue)] text-white w-9 h-9 rounded-xl flex items-center justify-center shadow-sm active:scale-95 transition-transform" @click="navigateTo('/buat')">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        <button class="md:hidden bg-[var(--accent)] text-white w-9 h-9 rounded-xl flex items-center justify-center shadow-sm active:scale-95 transition-transform" @click="navigateTo('/buat')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
         </button>
+      </div>
+
+      <!-- Status Legend Pills -->
+      <div class="flex flex-wrap items-center gap-3.5 px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] shadow-sm">
+        <span class="text-xs font-semibold tracking-wider text-[var(--text-muted)] uppercase mr-1">Status:</span>
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-slate-500/30 border border-slate-500"></span>
+          <span class="text-xs font-medium text-[var(--text-secondary)]">Planning</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500/30 border border-emerald-500"></span>
+          <span class="text-xs font-medium text-[var(--text-secondary)]">Produksi</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-amber-500/30 border border-amber-500"></span>
+          <span class="text-xs font-medium text-[var(--text-secondary)]">QC</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-teal-500/30 border border-teal-500"></span>
+          <span class="text-xs font-medium text-[var(--text-secondary)]">Selesai</span>
+        </div>
       </div>
     </div>
 
     <!-- Calendar View -->
-    <div class="px-4">
-      <MonthlyCalendar 
-        :tasks="tasks.tasks" 
-        @task-click="handleTaskClick" 
-      />
-      
-      <!-- Keterangan Status -->
-      <div class="mt-6 p-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)]">
-        <p class="text-[10px] font-bold tracking-wider text-[var(--text-secondary)] uppercase mb-3">Legenda Status</p>
-        <div class="grid grid-cols-2 gap-2">
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-gray-500/20 border border-gray-500"></span>
-            <span class="text-xs font-semibold text-[var(--text-primary)]">Planning</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-blue-500/20 border border-blue-500"></span>
-            <span class="text-xs font-semibold text-[var(--text-primary)]">Produksi</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500"></span>
-            <span class="text-xs font-semibold text-[var(--text-primary)]">QC</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-green-500/20 border border-green-500"></span>
-            <span class="text-xs font-semibold text-[var(--text-primary)]">Selesai</span>
-          </div>
-        </div>
-      </div>
-    </div>
+    <MonthlyCalendar 
+      :tasks="tasks.tasks" 
+      @task-click="handleTaskClick" 
+    />
   </div>
 </template>
 

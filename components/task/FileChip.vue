@@ -7,7 +7,7 @@
     </svg>
     <span class="text-xs font-semibold text-green-400 truncate flex-1 min-w-0">{{ name }}</span>
     <a v-if="driveId" :href="`https://drive.google.com/file/d/${driveId}/view`"
-      target="_blank" class="text-xs text-blue-400 flex-shrink-0">Buka →</a>
+      target="_blank" class="text-xs font-semibold text-[var(--accent)] hover:underline flex-shrink-0">Buka File</a>
   </div>
 </template>
 

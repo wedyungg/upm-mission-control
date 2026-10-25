@@ -1,13 +1,14 @@
 <template>
-  <div class="p-buat">
-    <div class="page-top">
-      <div class="page-title">Buat Tugas</div>
+  <div class="px-4 md:px-8 py-4 md:py-6 max-w-3xl mx-auto">
+    <div class="mb-5">
+      <h1 class="text-xl md:text-2xl font-bold text-[var(--text-primary)] tracking-tight">Buat Tugas</h1>
+      <p class="text-xs text-[var(--text-secondary)] mt-0.5">Pencatatan tugas tim konten dan kegiatan administrasi</p>
     </div>
 
     <!-- Access denied -->
     <div v-if="!canCreateAny" class="card">
       <div class="no-access">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" class="mx-auto">
           <circle cx="12" cy="12" r="10"/>
           <path d="M4.93 4.93l14.14 14.14M15 9h.01M9 15h.01"/>
         </svg>
@@ -20,32 +21,40 @@
 
       <!-- Type selector -->
       <div class="type-sel">
-        <div
+        <button
           v-if="canCreateTim"
+          type="button"
           class="type-opt"
           :class="{ active: taskType === 'tim' }"
           @click="taskType = 'tim'"
-        >Tim / Konten</div>
-        <div
+        >Tim / Konten</button>
+        <button
           v-if="canCreateAdmin"
+          type="button"
           class="type-opt"
           :class="{ active: taskType === 'admin' }"
           @click="taskType = 'admin'"
-        >Administrasi</div>
+        >Administrasi</button>
       </div>
 
       <!-- Success state -->
       <Transition name="fade">
         <div v-if="showSuccess" class="card success-card">
-          <div class="success-ico">✅</div>
-          <div class="success-title">Tugas Berhasil Dibuat!</div>
+          <div class="w-14 h-14 rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)] flex items-center justify-center mx-auto mb-4">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <div class="success-title">Tugas Berhasil Dibuat</div>
           <div class="success-sub">
-  {{ lastType === 'admin'
-    ? 'Tugas administrasi ditambahkan ke antrean Penyelesaian.'
-    : 'Tugas tim ditambahkan ke alur Planning.' }}
-</div>
-          <button class="btn btn-primary" @click="resetForm">BUAT TUGAS LAGI</button>
-          <button class="btn btn-outline" style="margin-top:8px" @click="navigateTo('/')">KE BERANDA</button>
+            {{ lastType === 'admin'
+              ? 'Tugas administrasi telah ditambahkan dan ditandai Selesai.'
+              : 'Tugas tim telah ditambahkan ke alur kerja Planning.' }}
+          </div>
+          <div class="flex flex-col sm:flex-row gap-2.5 max-w-md mx-auto">
+            <button class="btn btn-primary" @click="resetForm">Buat Tugas Lagi</button>
+            <button class="btn btn-outline" @click="navigateTo('/')">Kembali ke Beranda</button>
+          </div>
         </div>
       </Transition>
 
@@ -56,15 +65,13 @@
         <!-- Progja selector -->
         <div class="ff">
           <label class="fl">Program Kerja (Progja)</label>
-          
           <IosSelect 
-  v-model="fTim.progja_id" 
-  :options="progjaTimOptions.map(p => ({ value: p.id, label: `(${p.grade}) - ${p.nama || p.name}` }))" 
-  placeholder="-- Pilih Program Kerja --" 
-  label="Daftar Progja" 
-  @change="onProgjaChange"
-/>
-          
+            v-model="fTim.progja_id" 
+            :options="progjaTimOptions.map(p => ({ value: p.id, label: `(${p.grade}) - ${p.nama || (p as any).name}` }))" 
+            placeholder="-- Pilih Program Kerja --" 
+            label="Daftar Progja" 
+            @change="onProgjaChange"
+          />
           <div v-if="err.progja" class="ferr">{{ err.progja }}</div>
         </div>
 
@@ -74,60 +81,66 @@
           <div v-if="err.name" class="ferr">{{ err.name }}</div>
         </div>
 
-        <div class="ff">
-          <label class="fl">Assignee (Crew)</label>
-          <IosSelect 
-            v-model="fTim.assignee" 
-            :options="crewOptions" 
-            placeholder="-- Pilih Crew --" 
-            label="Daftar Crew" 
-          />
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="ff">
+            <label class="fl">Assignee (Crew)</label>
+            <IosSelect 
+              v-model="fTim.assignee" 
+              :options="crewOptions" 
+              placeholder="-- Pilih Crew --" 
+              label="Daftar Crew" 
+            />
+          </div>
+
+          <div class="ff">
+            <label class="fl">Target Tayang (Publish Date)</label>
+            <input v-model="fTim.publish_date" type="date" class="fi">
+          </div>
         </div>
 
-        <div class="ff">
-          <label class="fl">Target Tayang (Publish Date)</label>
-          <input v-model="fTim.publish_date" type="date" class="fi">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="ff">
+            <label class="fl">Platform</label>
+            <IosSelect 
+              v-model="fTim.platform" 
+              :options="PLATFORMS" 
+              label="Pilih Platform" 
+            />
+          </div>
+
+          <div class="ff">
+            <label class="fl">Durasi / Slide</label>
+            <IosSelect 
+              v-model="fTim.durasi" 
+              :options="DURASI" 
+              label="Pilih Durasi" 
+            />
+          </div>
         </div>
 
-        <div class="ff">
-          <label class="fl">Platform</label>
-          <IosSelect 
-            v-model="fTim.platform" 
-            :options="PLATFORMS" 
-            label="Pilih Platform" 
-          />
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="ff">
+            <label class="fl">Deadline Skrip</label>
+            <IosSelect 
+              v-model="fTim.deadlineH" 
+              :options="[
+                { value: 24, label: '1 Hari' },
+                { value: 48, label: '2 Hari' },
+                { value: 72, label: '3 Hari' },
+                { value: 168, label: '1 Minggu' }
+              ]" 
+              label="Pilih Deadline Skrip" 
+            />
+          </div>
+
+          <div class="ff">
+            <label class="fl">Link Skrip (opsional)</label>
+            <input v-model="fTim.skrip" type="url" class="fi" placeholder="https://docs.google.com/...">
+          </div>
         </div>
 
-        <div class="ff">
-          <label class="fl">Durasi / Slide</label>
-          <IosSelect 
-            v-model="fTim.durasi" 
-            :options="DURASI" 
-            label="Pilih Durasi" 
-          />
-        </div>
-
-        <div class="ff">
-          <label class="fl">Deadline Skrip</label>
-          <IosSelect 
-            v-model="fTim.deadlineH" 
-            :options="[
-              { value: 24, label: '1 Hari' },
-              { value: 48, label: '2 Hari' },
-              { value: 72, label: '3 Hari' },
-              { value: 168, label: '1 Minggu' }
-            ]" 
-            label="Pilih Deadline Skrip" 
-          />
-        </div>
-
-        <div class="ff">
-          <label class="fl">Link Skrip (opsional)</label>
-          <input v-model="fTim.skrip" type="url" class="fi" placeholder="https://docs.google.com/...">
-        </div>
-
-        <button class="btn btn-primary" :disabled="submitting" @click="submit">
-          {{ submitting ? 'Membuat...' : 'BUAT JADWAL SEKARANG' }}
+        <button class="btn btn-primary mt-2" :disabled="submitting" @click="submit">
+          {{ submitting ? 'Menyimpan...' : 'Simpan Tugas Tim' }}
         </button>
       </div>
 
@@ -136,11 +149,11 @@
         <div class="card-title">Detail Tugas Administrasi</div>
 
         <div class="info-note">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="flex-shrink-0">
             <circle cx="12" cy="12" r="10"/>
             <path d="M12 8v4M12 16h.01"/>
           </svg>
-          Tugas administrasi akan langsung ditandai <strong>Selesai</strong> setelah dibuat.
+          <span>Tugas administrasi akan langsung ditandai <strong>Selesai</strong> setelah dibuat.</span>
         </div>
 
         <!-- Progja selector admin -->
@@ -158,21 +171,23 @@
           </select>
         </div>
 
-        <div class="ff">
-          <label class="fl">Grade (Beban Kerja)</label>
-          <select v-model="fAdmin.grade" class="fi">
-            <option value="S">S — Kompleks</option>
-            <option value="A">A — Berat</option>
-            <option value="B">B — Sedang</option>
-            <option value="C">C — Ringan</option>
-          </select>
-        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="ff">
+            <label class="fl">Grade (Beban Kerja)</label>
+            <select v-model="fAdmin.grade" class="fi">
+              <option value="S">S — Kompleks</option>
+              <option value="A">A — Berat</option>
+              <option value="B">B — Sedang</option>
+              <option value="C">C — Ringan</option>
+            </select>
+          </div>
 
-        <div class="ff">
-          <label class="fl">Kategori</label>
-          <select v-model="fAdmin.kat" class="fi">
-            <option v-for="k in KAT_ADMIN" :key="k">{{ k }}</option>
-          </select>
+          <div class="ff">
+            <label class="fl">Kategori</label>
+            <select v-model="fAdmin.kat" class="fi">
+              <option v-for="k in KAT_ADMIN" :key="k">{{ k }}</option>
+            </select>
+          </div>
         </div>
 
         <div class="ff">
@@ -181,23 +196,25 @@
           <div v-if="err.name" class="ferr">{{ err.name }}</div>
         </div>
 
-        <div class="ff">
-          <label class="fl">Link Lampiran (opsional)</label>
-          <input v-model="fAdmin.link" type="url" class="fi" placeholder="https://drive.google.com/...">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="ff">
+            <label class="fl">Link Lampiran (opsional)</label>
+            <input v-model="fAdmin.link" type="url" class="fi" placeholder="https://drive.google.com/...">
+          </div>
+
+          <div class="ff">
+            <label class="fl">Deadline</label>
+            <select v-model="fAdmin.deadlineH" class="fi">
+              <option :value="24">1 Hari</option>
+              <option :value="48">2 Hari</option>
+              <option :value="72">3 Hari</option>
+              <option :value="168">1 Minggu</option>
+            </select>
+          </div>
         </div>
 
-        <div class="ff">
-          <label class="fl">Deadline</label>
-          <select v-model="fAdmin.deadlineH" class="fi">
-            <option :value="24">1 Hari</option>
-            <option :value="48">2 Hari</option>
-            <option :value="72">3 Hari</option>
-            <option :value="168">1 Minggu</option>
-          </select>
-        </div>
-
-        <button class="btn btn-primary" :disabled="submitting" @click="submit">
-          {{ submitting ? 'Membuat...' : 'BUAT TUGAS' }}
+        <button class="btn btn-primary mt-2" :disabled="submitting" @click="submit">
+          {{ submitting ? 'Membuat...' : 'Simpan Tugas Administrasi' }}
         </button>
       </div>
 
@@ -223,13 +240,10 @@ const route       = useRoute()
 const { approxCurrentHijriYear, getCurrentHijriMonth } = useHijri()
 const wa = useWhatsApp()
 
-// Fetch progja saat mount — items sudah berisi default, ini sync ke Supabase
 onMounted(() => {
   progjaStore.fetchProgja(approxCurrentHijriYear())
 })
 
-// ── Peta Kasta Grade ─────────────────────────────────────────
-// Mengubah abjad menjadi bobot angka agar 'S' berada di urutan teratas
 const gradeWeights: Record<string, number> = {
   'S': 1,
   'A': 2,
@@ -237,7 +251,6 @@ const gradeWeights: Record<string, number> = {
   'C': 4
 }
 
-// ── Computed options difilter per tipe & diurutkan berdasarkan Grade
 const progjaTimOptions = computed(() => {
   const filtered = progjaStore.items.filter(p => p.type === 'tim')
   return filtered.sort((a, b) => {
@@ -255,7 +268,7 @@ const progjaAdminOptions = computed(() => {
     return weightA - weightB
   })
 })
-// ── Role access ──────────────────────────────────────────────
+
 const canCreateTim   = computed(() => ['ketua', 'planner'].includes(auth.currentUser?.role ?? ''))
 const canCreateAdmin = computed(() => ['ketua', 'admin_partnership'].includes(auth.currentUser?.role ?? ''))
 const canCreateAny   = computed(() => canCreateTim.value || canCreateAdmin.value)
@@ -266,7 +279,6 @@ const taskType = ref<TaskType>(
     : canCreateTim.value ? 'tim' : 'admin'
 )
 
-// ── Static options ───────────────────────────────────────────
 const KAT_TIM = [
   'Podcast/Reels/Carousel', 'Film Dokumenter', 'Video Profil',
   'Edukasi Fiqih', 'Edukasi Tauhid', 'Edukasi Kitab Kuning',
@@ -285,7 +297,6 @@ const crewOptions = computed(() => {
   return auth.USERS.map(u => ({ value: u.name, label: u.name }))
 })
 
-// ── Form states ──────────────────────────────────────────────
 const fTim = reactive({
   grade: 'A' as TaskGrade,
   kat: KAT_TIM[0],
@@ -294,7 +305,7 @@ const fTim = reactive({
   durasi: DURASI[0],
   deadlineH: 72,
   skrip: '',
-  progja_id: '',   // id dari ProgjaItem yang dipilih
+  progja_id: '',
   assignee: '',
   publish_date: '',
 })
@@ -305,7 +316,7 @@ const fAdmin = reactive({
   name: '',
   deadlineH: 48,
   link: '',
-  progja_id: '',   // id dari ProgjaItem yang dipilih
+  progja_id: '',
 })
 
 const err         = reactive({ name: '', progja: '' })
@@ -313,7 +324,6 @@ const submitting  = ref(false)
 const showSuccess = ref(false)
 const lastType    = ref<TaskType>('tim')
 
-// Saat progja dipilih, auto-isi grade dan kat sesuai data progja
 const onProgjaChange = () => {
   if (!fTim.progja_id) return
   const selected = progjaStore.items.find(p => p.id === fTim.progja_id)
@@ -323,7 +333,6 @@ const onProgjaChange = () => {
   }
 }
 
-// ── Validation ───────────────────────────────────────────────
 const validate = (): boolean => {
   err.name  = ''
   err.progja = ''
@@ -335,7 +344,6 @@ const validate = (): boolean => {
   return true
 }
 
-// ── Submit (Versi dengan Notif WA) ───────────────────────────
 const submit = async () => {
   if (!validate()) return
   submitting.value = true
@@ -347,12 +355,9 @@ const submit = async () => {
   const bulan = (currentHm - 10 + 12) % 12
 
   lastType.value = taskType.value
-  
-  // Njupuk jeneng user sing lagi login
   const actorName = auth.currentUser?.name || 'Tim UPM'
 
   if (taskType.value === 'tim') {
-    // 1. Simpan tugas anyar menyang variabel 'newTask'
     const newTask = await tasks.createTask({
       id:         't' + now,
       name:       fTim.name.trim(),
@@ -372,17 +377,15 @@ const submit = async () => {
       hijri_year: hy,
     })
     
-    // 2. KIRIM NOTIF WA
     await wa.notifyTaskCreated(newTask, actorName)
 
   } else {
-    // ✅ Solusi: Tugas Admin masuk ke tahap penyelesaian (distribusi)
     const newTask = await tasks.createTask({
       id:         'a' + now,
       name:       fAdmin.name.trim(),
       kat:        fAdmin.kat,
       grade:      fAdmin.grade,
-      status:     'selesai', // <--- DIUBAH DARI 'distribusi'
+      status:     'selesai',
       type:       'admin',
       deadline:   new Date(now + fAdmin.deadlineH * 3600000).toISOString(),
       publish_date: new Date(now + fAdmin.deadlineH * 3600000).toISOString(),
@@ -392,7 +395,6 @@ const submit = async () => {
       hijri_year: hy,
     })
 
-    // KIRIM NOTIF WA
     await wa.notifyTaskCreated(newTask, actorName)
   }
 
@@ -400,7 +402,7 @@ const submit = async () => {
   showSuccess.value = true
   toast.add({ title: 'Tugas berhasil dibuat ✓', color: 'green' })
 }
-// ── Reset ─────────────────────────────────────────────────────
+
 const resetForm = () => {
   showSuccess.value = false
   fTim.name      = ''
@@ -414,69 +416,98 @@ const resetForm = () => {
 </script>
 
 <style scoped>
-.p-buat    { padding-bottom: 24px; }
-.page-top  { padding: 16px 16px 0; margin-bottom: 14px; }
-.page-title { font-size: 1.25rem; font-weight: 700; color: var(--text-primary); }
-
-.type-sel { display: flex; gap: 8px; padding: 0 16px; margin-bottom: 14px; }
+.type-sel {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+  background: var(--bg-elevated);
+  padding: 5px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+}
 .type-opt {
-  flex: 1; padding: 11px; border-radius: 10px;
-  border: 1.5px solid var(--border-md); cursor: pointer; text-align: center;
-  font-size: 0.875rem; font-weight: 600; color: var(--text-muted);
-  transition: all .15s; background: transparent;
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: all .15s;
+  background: transparent;
   -webkit-tap-highlight-color: transparent;
 }
-.type-opt.active { border-color: var(--blue); background: color-mix(in srgb, var(--blue) 12%, transparent); color: var(--blue); }
+.type-opt:hover { color: var(--text-primary); }
+.type-opt.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
 
 .card {
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: 16px; padding: 16px;
-  margin: 0 16px 12px; width: calc(100% - 32px); overflow: hidden;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 20px;
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+}
+@media (min-width: 640px) {
+  .card { padding: 24px; }
 }
 .card-title {
-  font-size: 0.75rem; font-weight: 700; letter-spacing: 1px;
-  text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
 }
 
 .info-note {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 0.75rem; color: var(--blue);
-  background: color-mix(in srgb, var(--blue) 10%, transparent);
-  border: 1px solid color-mix(in srgb, var(--blue) 25%, transparent);
-  border-radius: 8px; padding: 8px 10px; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.78rem; color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  border-radius: 10px; padding: 10px 12px; margin-bottom: 16px;
 }
 
 .ff    { margin-bottom: 14px; }
 .fl    { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; display: block; }
 .fi    {
-  width: 100%; background: var(--bg-elevated); border: 1.5px solid var(--border-md);
-  border-radius: 8px; padding: 11px 14px; color: var(--text-primary);
-  font-size: 0.875rem; font-family: inherit; outline: none; transition: border-color .2s;
+  width: 100%; background: var(--bg-elevated); border: 1px solid var(--border-md);
+  border-radius: 10px; padding: 11px 14px; color: var(--text-primary);
+  font-size: 0.875rem; font-family: inherit; outline: none; transition: border-color .2s, box-shadow .2s;
 }
-.fi:focus { border-color: var(--blue); }
+.fi:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .ferr  { font-size: 0.75rem; color: var(--red); margin-top: 4px; }
 
 .btn {
   display: flex; align-items: center; justify-content: center;
-  width: 100%; padding: 13px; border-radius: 10px; border: none;
-  font-size: 0.875rem; font-weight: 700; letter-spacing: .4px;
-  cursor: pointer; font-family: inherit; transition: opacity .15s;
+  width: 100%; padding: 13px 16px; border-radius: 12px; border: none;
+  font-size: 0.875rem; font-weight: 600;
+  cursor: pointer; font-family: inherit; transition: background .15s, transform .12s, opacity .15s;
 }
 .btn:disabled                  { opacity: .6; cursor: not-allowed; }
-.btn:active:not(:disabled)     { opacity: .85; }
-.btn-primary                   { background: var(--blue); color: #fff; }
-.btn-outline                   { background: transparent; border: 1.5px solid var(--border-md); color: var(--text-secondary); }
+.btn:active:not(:disabled)     { transform: scale(0.985); }
+.btn-primary                   { background: var(--accent); color: #fff; }
+.btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+.btn-outline                   { background: var(--bg-elevated); border: 1px solid var(--border-md); color: var(--text-primary); }
+.btn-outline:hover             { border-color: var(--accent); color: var(--accent); }
 
-.success-card  { text-align: center; padding: 24px; }
-.success-ico   { font-size: 48px; margin-bottom: 10px; }
-.success-title { font-size: 1.125rem; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
-.success-sub   { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 20px; }
+.success-card  { text-align: center; padding: 32px 24px; }
+.success-title { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+.success-sub   { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 24px; }
 
 .no-access       { text-align: center; padding: 32px 16px; }
 .no-access-title { font-size: 1rem; font-weight: 700; color: var(--text-primary); margin: 12px 0 6px; }
 .no-access-sub   { font-size: 0.875rem; color: var(--text-muted); }
 
-.fade-enter-active, .fade-leave-active { transition: all .25s ease; }
+.fade-enter-active, .fade-leave-active { transition: all .22s ease; }
 .fade-enter-from { opacity: 0; transform: translateY(8px); }
 .fade-leave-to   { opacity: 0; }
 </style>
