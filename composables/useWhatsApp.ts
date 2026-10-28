@@ -90,6 +90,16 @@ export const useWhatsApp = () => {
     msg += `📊 *Status:* ${task.status.toUpperCase()}\n`
     msg += `⏰ *Deadline ${nextStep}:* ${formatDeadline(task.deadline)}\n`
     
+    if (task.file) {
+      if (/^https?:\/\//i.test(task.file)) {
+        msg += `🔗 *Tautan:* ${task.file}\n`
+      } else if (task.file_drive_id) {
+        msg += `📁 *File Drive:* https://drive.google.com/file/d/${task.file_drive_id}/view\n`
+      } else {
+        msg += `📁 *File:* ${task.file}\n`
+      }
+    }
+
     if (extra) msg += `💬 *Catatan:* ${extra}\n`
 
     if (event !== 'task_selesai') {

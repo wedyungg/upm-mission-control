@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Live Monitor Bot WhatsApp @upm</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #090d16;
+      color: #e2e8f0;
+      margin: 0;
+      padding: 24px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .title-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #10b981;
+      display: inline-block;
+    }
+    h1 {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 0;
+      color: #fff;
+    }
+    .badge {
+      font-size: 12px;
+      padding: 4px 10px;
+      background: rgba(56, 189, 248, 0.12);
+      color: #38bdf8;
+      border-radius: 999px;
+      font-weight: 500;
+    }
+    .log-box {
+      background: #111827;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 16px;
+      min-height: 400px;
+      max-height: 70vh;
+      overflow-y: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .log-item {
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      background: rgba(255,255,255,0.02);
+      border-left: 3px solid #64748b;
+      word-break: break-word;
+    }
+    .log-item.in {
+      border-left-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.05);
+    }
+    .log-item.out {
+      border-left-color: #10b981;
+      background: rgba(16, 185, 129, 0.05);
+    }
+    .log-item.err {
+      border-left-color: #ef4444;
+      background: rgba(239, 68, 68, 0.08);
+    }
+    .empty-state {
+      text-align: center;
+      color: #64748b;
+      padding: 40px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="title-row">
+        <span class="status-dot"></span>
+        <h1>Live Log Bot @upm WhatsApp</h1>
+      </div>
+      <span class="badge" id="auto-badge">Auto-refresh (2s)</span>
+    </div>
+
+    <div class="log-box" id="logBox">
+      <div class="empty-state">Menunggu aktivitas pesan WhatsApp...</div>
+    </div>
+  </div>
+
+  <script>
+    async function fetchLogs() {
+      try {
+        const res = await fetch('/api/bot-logs')
+        const data = await res.json()
+        const box = document.getElementById('logBox')
+
+        if (!data.logs || data.logs.length === 0) {
+          box.innerHTML = '<div class="empty-state">Belum ada aktivitas baru. Silakan ketik <b>@upm halo</b> di WA...</div>'
+          return
+        }
+
+        box.innerHTML = data.logs.map(log => {
+          let typeClass = ''
+          if (log.includes('📩 [Mention Diterima]')) typeClass = 'in'
+          else if (log.includes('📤 [Balasan Terkirim]')) typeClass = 'out'
+          else if (log.includes('❌')) typeClass = 'err'
+          return `<div class="log-item ${typeClass}">${escapeHtml(log)}</div>`
+        }).join('')
+      } catch (err) {
+        console.error(err)
+      }
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    }
+
+    fetchLogs()
+    setInterval(fetchLogs, 2000)
+  </script>
+</body>
+</html>

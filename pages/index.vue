@@ -157,6 +157,9 @@
       <!-- Right Column (5 cols on Desktop): Weekly Tracker + Sedang Berlangsung -->
       <div class="lg:col-span-5 space-y-6">
 
+        <!-- Social Media Total Followers Card -->
+        <DashboardSocialSummaryCard />
+
         <!-- Weekly Target Tracker -->
         <DashboardWeeklyTracker />
 

@@ -42,7 +42,7 @@
       <!-- Kinerja Individu (5 cols on desktop) -->
       <div class="card lg:col-span-5">
         <div class="flex items-center justify-between mb-4 pb-3 border-b border-[var(--border)]">
-          <p class="slabel !mb-0">Kinerja Tim Rubrik</p>
+          <p class="slabel !mb-0">Kinerja Tim</p>
           <span class="text-xs font-mono text-[var(--text-muted)]">{{ HIJRI_MONTHS_ID[activeMonth] }}</span>
         </div>
         <div v-for="m in displayMembers" :key="m.id"
@@ -56,7 +56,7 @@
                 {{ m.doneCount }}/{{ m.monthlyTarget }} Tayang
               </span>
             </div>
-            <p class="text-xs text-[var(--text-secondary)]">{{ m.rubrik || m.roleLabel }} · {{ m.totalCount }} konten bulan ini</p>
+            <p class="text-xs text-[var(--text-secondary)]">{{ m.totalCount }} konten bulan ini</p>
             <div class="flex items-center gap-2.5 mt-2">
               <div class="flex-1 h-2 bg-[var(--bg-elevated)] rounded-full overflow-hidden min-w-0">
                 <div class="h-full rounded-full transition-[width] duration-700"

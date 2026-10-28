@@ -122,16 +122,36 @@
               <TaskFileChip v-if="task.file" :name="task.file" :drive-id="task.file_drive_id" />
               
               <div class="ff mt-3">
-                <label class="fl">Catatan Hasil / Tautan Konten (opsional)</label>
-                <textarea v-model="fProd.note" class="fi" rows="2" placeholder="Tuliskan keterangan file atau link tambahan..."/>
+                <label class="fl">Catatan Hasil / Keterangan (opsional)</label>
+                <textarea v-model="fProd.note" class="fi" rows="2" placeholder="Tuliskan keterangan file atau catatan tambahan..."/>
               </div>
 
-              <TaskUploadZone :for-id="`fe-${task.id}`" label="Unggah File Final" sub="Video atau gambar siap tayang (tersimpan di Google Drive)" />
+              <div class="ff mt-3">
+                <label class="fl">Atau Tempel Tautan File / Google Drive Langsung (opsional)</label>
+                <div class="flex gap-2">
+                  <input
+                    v-model="fProd.directLink"
+                    type="url"
+                    class="fi !py-2 text-xs"
+                    placeholder="https://drive.google.com/..."
+                  />
+                  <button
+                    type="button"
+                    class="btn-primary !w-auto text-xs font-semibold px-3.5 py-2 flex-shrink-0"
+                    :disabled="!fProd.directLink || saving"
+                    @click="saveDirectLink"
+                  >
+                    Simpan Link
+                  </button>
+                </div>
+              </div>
+
+              <TaskUploadZone :for-id="`fe-${task.id}`" label="Unggah File Final" sub="Video atau gambar siap tayang (otomatis masuk ke folder Google Drive)" />
               <input :id="`fe-${task.id}`" type="file" class="hidden" accept="video/*,image/*,.pdf,.zip" @change="handleUpload($event)"/>
               <TaskUploadProgress v-if="uploading" :pct="uploadPct" :path="drivePath" />
               
               <div v-if="!uploading" class="mt-4">
-                <button class="btn-primary w-full" :disabled="saving || (!task.file && !fProd.note)" @click="submitProduksi">
+                <button class="btn-primary w-full" :disabled="saving || (!task.file && !fProd.note && !fProd.directLink)" @click="submitProduksi">
                   Selesaikan Produksi & Kirim ke Review
                 </button>
               </div>
@@ -151,11 +171,32 @@
             <div class="prev-box mb-4">
               <p class="text-xs text-[var(--text-muted)] mb-1.5">File hasil produksi & edit:</p>
               <TaskFileChip v-if="task.file" :name="task.file" :drive-id="task.file_drive_id" :inline="true" />
+              <p v-else class="text-xs text-[var(--text-muted)] italic py-1">Belum ada file atau tautan terlampir</p>
               <p v-if="task.produksi_note" class="text-xs text-[var(--accent)] mt-2">{{ task.produksi_note }}</p>
             </div>
 
             <p v-if="!auth.hasTabAccess('qc')" class="hint">Akses khusus Review / PIC.</p>
             <div v-else>
+              <div v-if="!task.file" class="ff mb-4">
+                <label class="fl">Tautan File Hasil Produksi (opsional / jika belum terlampir)</label>
+                <div class="flex gap-2">
+                  <input
+                    v-model="fQcLink"
+                    type="url"
+                    class="fi !py-2 text-xs"
+                    placeholder="https://drive.google.com/..."
+                  />
+                  <button
+                    type="button"
+                    class="btn-primary !w-auto text-xs font-semibold px-3.5 py-2 flex-shrink-0"
+                    :disabled="!fQcLink || saving"
+                    @click="saveQcLink"
+                  >
+                    Simpan Link
+                  </button>
+                </div>
+              </div>
+
               <div class="ff">
                 <label class="fl">Catatan Review / Tautan Postingan (Opsional)</label>
                 <textarea v-model="fQc.comment" class="fi" rows="3" placeholder="Catatan revisi atau link postingan di akun Matholek..."/>
@@ -175,7 +216,10 @@
               <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4L12 14.01l-3-3"/></svg>
             </div>
             <p class="text-lg font-bold text-[var(--text-primary)] mb-1">Konten Telah Tayang</p>
-            <p class="text-xs text-[var(--text-muted)]">File / Bukti: {{ task.file ?? '—' }}</p>
+            <div v-if="task.file" class="max-w-md mx-auto my-3 text-left">
+              <TaskFileChip :name="task.file" :drive-id="task.file_drive_id" />
+            </div>
+            <p v-else class="text-xs text-[var(--text-muted)]">Belum ada file terlampir</p>
             <p v-if="task.publish_date" class="text-xs text-[var(--accent)] mt-2.5 font-semibold">Jadwal tayang: {{ new Date(task.publish_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) }}</p>
           </div>
         </template>
@@ -235,13 +279,18 @@ const STEPS = [
 
 const fP    = reactive({ konsep: '', grade: 'A' as TaskGrade, skrip: '', deadlineH: 72 })
 const fQc   = reactive({ comment: '' })
-const fProd = reactive({ note: '' })
+const fQcLink = ref('')
+const fProd = reactive({ note: '', directLink: '' })
 
 watch(task, t => {
   if (!t) return
   fP.konsep = t.konsep ?? ''
   fP.grade  = t.grade
   fP.skrip  = t.skrip  ?? ''
+  fProd.note = t.produksi_note ?? ''
+  if (t.file && /^https?:\/\//i.test(t.file)) {
+    fProd.directLink = t.file
+  }
 }, { immediate: true })
 
 const saving    = ref(false)
@@ -254,37 +303,91 @@ const submitPlanning = async () => {
   if (!fP.konsep.trim()) { formErr.value = 'Konsep wajib diisi'; return }
   if (!task.value) return
   saving.value = true
-  await tasks.updateStatus(task.value.id, 'produksi', {
+  const patch = {
     grade:    fP.grade,
     konsep:   fP.konsep.trim(),
     skrip:    fP.skrip,
     deadline: new Date(Date.now() + fP.deadlineH * 3_600_000).toISOString(),
     qc_comment: null
-  })
+  }
+  await tasks.updateStatus(task.value.id, 'produksi', patch)
+  wa.notifyPlanningDone({ ...task.value, ...patch, status: 'produksi' }, actorName.value).catch(() => {})
   saving.value = false
   toast.add({ title: 'Planning selesai, dilanjutkan ke Produksi', color: 'green' })
+}
+
+const saveDirectLink = async () => {
+  if (!task.value || !fProd.directLink.trim()) return
+  saving.value = true
+  try {
+    const patch = { file: fProd.directLink.trim() }
+    await tasks.updateStatus(task.value.id, task.value.status, patch)
+    wa.notifyUploadProduksi({ ...task.value, ...patch }, actorName.value).catch(() => {})
+    toast.add({ title: 'Tautan berhasil disimpan ✓', color: 'green' })
+  } catch (err: any) {
+    toast.add({ title: 'Gagal menyimpan tautan: ' + (err.message || 'Terjadi kesalahan'), color: 'red' })
+  } finally {
+    saving.value = false
+  }
 }
 
 const submitProduksi = async () => {
   if (!task.value) return
   saving.value = true
-  await tasks.updateStatus(task.value.id, 'qc', { produksi_note: fProd.note })
-  saving.value = false
-  toast.add({ title: 'Konten berhasil dikirim ke QC', color: 'green' })
+  try {
+    const patch: any = { produksi_note: fProd.note }
+    if (fProd.directLink.trim() && !task.value.file) {
+      patch.file = fProd.directLink.trim()
+    }
+    await tasks.updateStatus(task.value.id, 'qc', patch)
+    wa.notifyUploadProduksi({ ...task.value, ...patch, status: 'qc' }, actorName.value).catch(() => {})
+    toast.add({ title: 'Konten berhasil dikirim ke QC', color: 'green' })
+  } catch (err: any) {
+    toast.add({ title: 'Gagal mengirim ke QC: ' + (err.message || 'Terjadi kesalahan'), color: 'red' })
+  } finally {
+    saving.value = false
+  }
+}
+
+const saveQcLink = async () => {
+  if (!task.value || !fQcLink.value.trim()) return
+  saving.value = true
+  try {
+    const patch = { file: fQcLink.value.trim() }
+    await tasks.updateStatus(task.value.id, task.value.status, patch)
+    toast.add({ title: 'Tautan berhasil disimpan ✓', color: 'green' })
+    fQcLink.value = ''
+  } catch (err: any) {
+    toast.add({ title: 'Gagal menyimpan tautan: ' + (err.message || 'Terjadi kesalahan'), color: 'red' })
+  } finally {
+    saving.value = false
+  }
 }
 
 const submitQc = async (d: 'setuju' | 'revisi') => {
   if (!task.value) return
   saving.value = true
-  if (d === 'setuju') {
-    await tasks.updateStatus(task.value.id, 'selesai', { qc_comment: fQc.comment })
-    toast.add({ title: `Tugas disetujui dan selesai`, color: 'green' })
-  } else {
-    await tasks.updateStatus(task.value.id, 'produksi', { qc_comment: fQc.comment })
-    toast.add({ title: 'Revisi dikirim ke Produksi', color: 'orange' })
+  try {
+    const patch: any = { qc_comment: fQc.comment }
+    if (fQcLink.value.trim() && !task.value.file) {
+      patch.file = fQcLink.value.trim()
+    }
+    if (d === 'setuju') {
+      await tasks.updateStatus(task.value.id, 'selesai', patch)
+      wa.notifyQcApproved({ ...task.value, ...patch, status: 'selesai' }, actorName.value, fQc.comment).catch(() => {})
+      toast.add({ title: `Tugas disetujui dan selesai`, color: 'green' })
+    } else {
+      await tasks.updateStatus(task.value.id, 'produksi', patch)
+      wa.notifyQcRevision({ ...task.value, ...patch, status: 'produksi' }, actorName.value, fQc.comment).catch(() => {})
+      toast.add({ title: 'Revisi dikirim ke Produksi', color: 'orange' })
+    }
+    fQc.comment = ''
+    fQcLink.value = ''
+  } catch (err: any) {
+    toast.add({ title: 'Gagal memproses review: ' + (err.message || 'Terjadi kesalahan'), color: 'red' })
+  } finally {
+    saving.value = false
   }
-  fQc.comment = ''
-  saving.value = false
 }
 
 const handleUpload = async (e: Event) => {
@@ -294,27 +397,16 @@ const handleUpload = async (e: Event) => {
   uploading.value = true
   uploadPct.value = 0
   try {
-    let result
-    if (drive.driveConnected.value) {
-      result = await drive.uploadFile(file, task.value, p => { uploadPct.value = p })
-    } else {
-      await new Promise<void>(res => {
-        let p = 0
-        const iv = setInterval(() => {
-          p += Math.random() * 18
-          uploadPct.value = Math.min(Math.round(p), 99)
-          if (p >= 100) { clearInterval(iv); uploadPct.value = 100; setTimeout(res, 300) }
-        }, 120)
-      })
-      result = { fileId: '', fileName: file.name, webViewLink: '', drivePath: '' }
-    }
-    await tasks.updateStatus(task.value.id, task.value.status, {
+    const result = await drive.uploadFile(file, task.value, p => { uploadPct.value = p })
+    const patch = {
       file:          result.fileName,
       file_drive_id: result.fileId || undefined,
-    })
-    toast.add({ title: `"${file.name}" berhasil diupload ✓`, color: 'green' })
+    }
+    await tasks.updateStatus(task.value.id, task.value.status, patch)
+    wa.notifyUploadProduksi({ ...task.value, ...patch }, actorName.value).catch(() => {})
+    toast.add({ title: `"${file.name}" berhasil diupload ke Google Drive ✓`, color: 'green' })
   } catch (err: any) {
-    toast.add({ title: 'Upload gagal: ' + err.message, color: 'red' })
+    toast.add({ title: 'Upload gagal: ' + (err.message || 'Terjadi kesalahan'), color: 'red' })
   } finally {
     uploading.value = false
     uploadPct.value = 0

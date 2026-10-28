@@ -24,10 +24,7 @@
         
         <div class="flex-1 min-w-0">
           <div class="flex items-center justify-between mb-1">
-            <div class="min-w-0 pr-2">
-              <p class="text-sm font-semibold text-[var(--text-primary)] truncate">{{ c.name }}</p>
-              <p class="text-xs text-[var(--text-secondary)] truncate">{{ c.rubrik }}</p>
-            </div>
+            <p class="text-sm font-semibold text-[var(--text-primary)] truncate pr-2">{{ c.name }}</p>
             <span class="text-xs font-semibold flex-shrink-0" :class="c.count >= (c.weeklyTarget || 2) ? 'text-[var(--green)]' : 'text-[var(--text-secondary)]'">
               {{ c.count }} / {{ c.weeklyTarget || 2 }}
             </span>

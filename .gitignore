@@ -42,3 +42,8 @@ debug.mjs
 start-server.mjs
 output.zip
 *.zip
+
+# WhatsApp Bot sensitive files
+whatsapp-bot/node_modules
+whatsapp-bot/auth_info_baileys
+public/qr.png

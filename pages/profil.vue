@@ -16,7 +16,6 @@
               :style="{ background: user?.bg, color: user?.color }">{{ user?.initials }}</div>
             <div class="flex-1 min-w-0">
               <p class="text-base font-bold text-[var(--text-primary)] truncate">{{ user?.name }}</p>
-              <p class="text-xs text-[var(--text-muted)] mt-0.5">{{ user?.roleLabel }}</p>
             </div>
           </div>
           <div class="p-3 bg-[var(--bg-elevated)] rounded-xl border border-[var(--border)] flex items-center justify-between">
@@ -104,7 +103,7 @@
             <div class="p-3.5 bg-[var(--bg-elevated)] rounded-xl border border-[var(--border)] mb-3.5 space-y-2">
               <div class="flex items-center justify-between">
                 <p class="text-xs text-[var(--text-muted)]">Provider</p>
-                <p class="text-xs font-semibold text-[var(--text-secondary)]">Fonnte API</p>
+                <p class="text-xs font-semibold text-[var(--text-secondary)]">Bot WA UPM / Fonnte</p>
               </div>
               <div class="flex items-center justify-between">
                 <p class="text-xs text-[var(--text-muted)]">Status Kredensial</p>

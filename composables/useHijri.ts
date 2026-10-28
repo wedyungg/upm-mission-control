@@ -47,14 +47,24 @@ export const useHijri = () => {
   }
 
   /**
-   * Approximate current Hijri year from today's Gregorian date
-   * Reference: 1 Muharram 1446H ≈ 7 July 2024
+   * Mendapatkan Tahun Akademik Hijriah saat ini di Matholek/UPM
+   * Periode kepengurusan/akademik UPM dimulai 12 Syawwal s/d 25 Sya'ban tahun berikutnya.
+   * - Jika saat ini berada di bulan Syawwal (10), Dzulqa'dah (11), atau Dzulhijjah (12), tahun akademik = kalender Hijriah saat itu.
+   * - Jika saat ini berada di Muharram (1) s/d Ramadhan (9) (contoh: Jumadil Ula 1448H), periode aktif adalah yang dimulai sejak Syawwal tahun lalu,
+   *   sehingga tahun akademik dasar adalah (Tahun Kalender - 1) = 1447H.
+   * Menghasilkan rentang akademik: 1447H — 1448H (2026-2027 Masehi).
    */
   const approxCurrentHijriYear = (): number => {
-    const base = new Date(2024, 6, 7)
-    const now  = new Date()
-    const diffDays = (now.getTime() - base.getTime()) / 86_400_000
-    return 1446 + Math.floor(diffDays / 354.36)
+    try {
+      const d = new Date()
+      const yearFormatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', { year: 'numeric' })
+      const monthFormatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', { month: 'numeric' })
+      const calYear = parseInt(yearFormatter.format(d).replace(/[^0-9]/g, ''), 10) || 1448
+      const calMonth = parseInt(monthFormatter.format(d).replace(/[^0-9]/g, ''), 10) || 5
+      return calMonth >= 10 ? calYear : calYear - 1
+    } catch {
+      return 1447
+    }
   }
 
   /**
@@ -105,6 +115,35 @@ const getCurrentHijriMonth = (): number => {
     }
   }
 
+  /**
+   * Mendapatkan tanggal hari Hijriah saat ini (1-30) secara otomatis dan dinamis
+   */
+  const getCurrentHijriDay = (): number => {
+    try {
+      const formatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-civil', { day: 'numeric' })
+      const dayNum = parseInt(formatter.format(new Date()), 10)
+      return isNaN(dayNum) ? 16 : dayNum
+    } catch {
+      return 16
+    }
+  }
+
+  /**
+   * Format tanggal Hijriah hari ini secara dinamis dan bergerak (contoh: "16 Jumadil Ula 1448 H")
+   */
+  const getTodayHijriFormatted = (): string => {
+    const day = getCurrentHijriDay()
+    const hm = getCurrentHijriMonth()
+    const monthIdx = (hm - 10 + 12) % 12
+    const monthName = HIJRI_MONTHS_ID[monthIdx] || 'Jumadil Ula'
+    let calYear = 1448
+    try {
+      const yearFormatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', { year: 'numeric' })
+      calYear = parseInt(yearFormatter.format(new Date()).replace(/[^0-9]/g, ''), 10) || 1448
+    } catch {}
+    return `${day} ${monthName} ${calYear} H`
+  }
+
   return {
     hijriToGregorian,
     getHijriPeriod,
@@ -114,5 +153,7 @@ const getCurrentHijriMonth = (): number => {
     MONTHS_ID,
     HIJRI_MONTHS_ID,
     getCurrentHijriMonth,
+    getCurrentHijriDay,
+    getTodayHijriFormatted,
   }
 }

@@ -23,16 +23,21 @@
               </div>
               
               <div class="sheet-body">
-                <button 
-                  v-for="(opt, idx) in normalizedOptions" 
-                  :key="idx"
-                  class="sheet-item"
-                  :class="{ active: modelValue === opt.value }"
-                  @click="selectOption(opt.value)"
-                >
-                  <span>{{ opt.label }}</span>
-                  <svg v-if="modelValue === opt.value" class="w-4 h-4 text-[var(--accent)] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                </button>
+                <template v-for="(opt, idx) in normalizedOptions" :key="idx">
+                  <div v-if="opt.isGroup" class="sheet-group-header">
+                    {{ opt.label }}
+                  </div>
+                  <button 
+                    v-else
+                    type="button"
+                    class="sheet-item"
+                    :class="{ active: modelValue === opt.value }"
+                    @click="selectOption(opt.value)"
+                  >
+                    <span>{{ opt.label }}</span>
+                    <svg v-if="modelValue === opt.value" class="w-4 h-4 text-[var(--accent)] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </button>
+                </template>
               </div>
             </div>
           </div>
@@ -67,8 +72,8 @@ const normalizedOptions = computed(() => {
 
 const selectedLabel = computed(() => {
   if (!props.modelValue && props.modelValue !== 0) return props.placeholder
-  const selected = normalizedOptions.value.find(o => o.value === props.modelValue)
-  return selected ? selected.label : props.placeholder
+  const selected = normalizedOptions.value.find(o => !o.isGroup && o.value === props.modelValue)
+  return selected ? selected.label : String(props.modelValue)
 })
 
 const selectOption = (val) => {
@@ -134,6 +139,18 @@ const selectOption = (val) => {
   overflow-y: auto; display: flex; flex-direction: column; gap: 4px; scrollbar-width: none;
 }
 .sheet-body::-webkit-scrollbar { display: none; }
+
+.sheet-group-header {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  padding: 12px 14px 4px;
+}
+.sheet-group-header:first-child {
+  padding-top: 4px;
+}
 
 .sheet-item {
   display: flex; justify-content: space-between; align-items: center;

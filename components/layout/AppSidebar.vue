@@ -57,23 +57,52 @@
         Menu Utama
       </p>
 
-      <button
-        v-for="item in navItems"
-        :key="item.path"
-        class="sidebar-link"
-        :class="{ active: isActive(item.path) }"
-        @click="go(item.path)"
-      >
-        <span class="sidebar-icon" v-html="item.icon" />
-        <span class="flex-1 text-left truncate">{{ item.label }}</span>
-        <span
-          v-if="item.badge"
-          class="text-xs font-bold px-2 py-0.5 rounded-md"
-          :class="isActive(item.path) ? 'bg-white/20 text-white' : 'bg-[var(--bg-elevated)] text-[var(--text-secondary)]'"
+      <template v-for="item in navItems" :key="item.path">
+        <button
+          class="sidebar-link"
+          :class="{ active: isActive(item.path) }"
+          @click="handleNavClick(item)"
         >
-          {{ item.badge }}
-        </span>
-      </button>
+          <span class="sidebar-icon" v-html="item.icon" />
+          <span class="flex-1 text-left truncate">{{ item.label }}</span>
+          <span
+            v-if="item.badge"
+            class="text-xs font-bold px-2 py-0.5 rounded-md"
+            :class="isActive(item.path) ? 'bg-white/20 text-white' : 'bg-[var(--bg-elevated)] text-[var(--text-secondary)]'"
+          >
+            {{ item.badge }}
+          </span>
+          <svg
+            v-if="item.children"
+            class="w-3.5 h-3.5 transition-transform duration-150"
+            :class="{ 'rotate-180': sosmedOpen || isActive('/sosmed') }"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+          >
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+
+        <!-- Sub-menu Sosmed (Analitik, Respon, Kalender Tayang) -->
+        <div
+          v-if="item.children && (sosmedOpen || isActive('/sosmed'))"
+          class="pl-7 pr-1 py-0.5 space-y-0.5"
+        >
+          <button
+            v-for="sub in item.children"
+            :key="sub.tab"
+            class="sidebar-sublink"
+            :class="{ active: isSubActive(sub.tab) }"
+            @click="go(`/sosmed?tab=${sub.tab}`)"
+          >
+            <span class="w-1.5 h-1.5 rounded-full flex-shrink-0" :class="isSubActive(sub.tab) ? 'bg-[var(--accent)]' : 'bg-[var(--border-md)]'" />
+            <span class="flex-1 text-left truncate">{{ sub.label }}</span>
+          </button>
+        </div>
+      </template>
     </nav>
 
     <!-- Google Drive Status Card -->
@@ -112,8 +141,7 @@
           {{ user?.initials }}
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-xs font-bold text-[var(--text-primary)] truncate">{{ user?.name }}</p>
-          <p class="text-xs text-[var(--text-muted)] truncate">{{ user?.roleLabel }}</p>
+          <p class="text-sm font-semibold text-[var(--text-primary)] truncate">{{ user?.name }}</p>
         </div>
       </div>
 
@@ -154,6 +182,7 @@ const toast      = useToast()
 const { approxCurrentHijriYear } = useHijri()
 
 const logoOk     = ref(true)
+const sosmedOpen = ref(true)
 const user       = computed(() => auth.currentUser)
 const isDark     = computed(() => themeStore.isDark)
 const hijriLabel = computed(() => `${approxCurrentHijriYear()}H`)
@@ -170,10 +199,15 @@ const navItems = computed(() => [
     badge: null,
   },
   {
-    label: 'Kalender Tayang',
-    path: '/kalender',
-    icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+    label: 'Sosmed',
+    path: '/sosmed',
+    icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`,
     badge: null,
+    children: [
+      { label: 'Analitik',        tab: 'analitik' },
+      { label: 'Respon',          tab: 'respon' },
+      { label: 'Kalender Tayang', tab: 'kalender' },
+    ],
   },
   {
     label: 'Manajemen Tim',
@@ -203,6 +237,25 @@ const navItems = computed(() => [
 
 const isActive = (path: string) =>
   path === '/' ? route.path === '/' : route.path.startsWith(path)
+
+const isSubActive = (tab: string) => {
+  if (!route.path.startsWith('/sosmed')) return false
+  const currentTab = String(route.query.tab || 'analitik')
+  return currentTab === tab
+}
+
+const handleNavClick = (item: any) => {
+  if (item.children) {
+    if (route.path.startsWith('/sosmed')) {
+      sosmedOpen.value = !sosmedOpen.value
+    } else {
+      sosmedOpen.value = true
+      go(item.path)
+    }
+    return
+  }
+  go(item.path)
+}
 
 const go = (path: string) => {
   if (path === '/manajemen' && auth.isReadOnly) {
@@ -239,6 +292,32 @@ const go = (path: string) => {
   background: var(--accent-soft);
   color: var(--accent);
   border-color: var(--border-md);
+  font-weight: 600;
+}
+
+.sidebar-sublink {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6.5px 10px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-sublink:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.sidebar-sublink.active {
+  color: var(--accent);
   font-weight: 600;
 }
 

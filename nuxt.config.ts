@@ -40,6 +40,7 @@ export default defineNuxtConfig({
     waToken: process.env.WA_TOKEN ?? '',
     waTarget: process.env.WA_TARGET ?? '',
     googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    geminiApiKey: process.env.GEMINI_API_KEY ?? '',
     
     // 🌐 PUBLIC SECTION: Bisa dibaca oleh browser (Hanya untuk ID biasa/URL)
     public: {
